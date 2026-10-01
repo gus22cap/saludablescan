@@ -21,7 +21,7 @@ Vamos **etapa por etapa**. No se pasa a la siguiente hasta probar la anterior en
 
 ---
 
-## Etapa 1 — Escanear y analizar ⬅️ *en prueba*
+## Etapa 1 — Escanear y analizar ✅
 
 - [x] Crear la estructura del proyecto y el estilo general (fondo claro, verde, tarjetas redondeadas)
 - [x] **Pantalla Escanear:** cámara con recuadro verde, botón de linterna y opción de tipear el código a mano
@@ -32,8 +32,8 @@ Vamos **etapa por etapa**. No se pasa a la siguiente hasta probar la anterior en
 - [x] **Pantalla Resultado:** foto, nombre, anillo con el puntaje, octógonos, chips ✓ / ! / ✗, resumen y datos por porción
 - [x] **Pantalla Ingredientes y aditivos:** pestañas Todos / Ingredientes / Aditivos, riesgo de cada aditivo y recuadro "¿Qué significa esto?"
 - [x] Armar una lista inicial de aditivos comunes (código INS/E, nombre, riesgo y explicación simple)
-- [ ] Probar en la compu (WAMP → `http://localhost/saludablescan`)
-- [ ] Publicar en Netlify o GitHub Pages y **probar en el celular** con productos reales
+- [x] Probar en la compu (WAMP → `http://localhost/saludablescan`)
+- [x] Publicar en GitHub Pages y **probar en el celular** → https://gus22cap.github.io/saludablescan/
 
 **Terminada cuando:** escaneás un producto del súper y ves su puntaje, sus octógonos y sus aditivos. Si no aparece, lo podés cargar a mano.
 
@@ -140,3 +140,5 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 30/09/2026 | Etapa 1 programada: escáner, búsqueda, octógonos, puntaje, ingredientes/aditivos y carga manual. Probado con Coca-Cola, Coca Zero, Oreo y Bon o Bon. Falta probar en el celular |
 | 30/09/2026 | La cámara ya no se prende sola. Se cambió el lector de códigos (el anterior achicaba la imagen y no leía códigos chicos) |
 | 30/09/2026 | Si Open Food Facts no tiene el producto, se busca en Precios Claros (nombre, marca y tamaño) y se completa el formulario solo |
+| 30/09/2026 | Se reconocen productos no alimenticios (higiene, limpieza) y se mejoró la pantalla de productos sin tabla nutricional |
+| 30/09/2026 | Publicada en GitHub Pages y probada en el celular: funciona. **Próximo: comparar envases reales y seguir con la Etapa 2** |
