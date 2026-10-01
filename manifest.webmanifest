@@ -1,0 +1,15 @@
+{
+  "name": "SaludableScan",
+  "short_name": "SaludableScan",
+  "description": "Tu salud en cada elección",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f7f5",
+  "theme_color": "#1e9e4a",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
