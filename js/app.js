@@ -83,6 +83,8 @@ function pantallaEscanear(prenderYa = false) {
         </div>
       </header>
 
+      ${navigator.onLine ? '' : '<div class="franja franja-oscura">Sin internet: vas a ver los productos que ya consultaste. Los nuevos se buscan cuando vuelva la conexión.</div>'}
+
       <div class="visor">
         <div id="lector"></div>
         <div class="visor-esquinas"><i></i><i></i><i></i><i></i></div>
@@ -235,8 +237,10 @@ async function obtener(codigo, vigente) {
     return r;
   } catch {
     if (vigente()) {
-      pantallaMensaje('No se pudo buscar',
-        'No pudimos consultar la base de productos: puede que no haya internet o que el servicio esté lento. Probá de nuevo en un ratito, o cargalo a mano.',
+      pantallaMensaje(navigator.onLine ? 'No se pudo buscar' : 'Sin internet',
+        navigator.onLine
+          ? 'No pudimos consultar la base de productos: puede que el servicio esté lento. Probá de nuevo en un ratito, o cargalo a mano.'
+          : 'Este producto todavía no está guardado en tu celular y no hay conexión para buscarlo. Probá cuando vuelva internet, o cargalo a mano.',
         [{ texto: 'Reintentar', href: '#/p/' + codigo + '?' + Date.now() }, { texto: 'Cargarlo a mano', href: '#/cargar/' + codigo }]);
     }
     return null;
@@ -251,6 +255,12 @@ function tarjetaNotas(notas) {
       <h3>${marca('ojo')} A tener en cuenta</h3>
       ${notas.map((x) => `<div><b>${esc(x.titulo)}</b><p>${esc(x.texto)}</p></div>`).join('')}
     </article>`;
+}
+
+// Número con coma decimal y unidad, o "sin dato" si falta
+function dato(valor, unidad) {
+  if (valor === null || valor === undefined || isNaN(valor)) return '<span class="sin-dato">sin dato</span>';
+  return `${String(Math.round(valor * 10) / 10).replace('.', ',')} ${unidad}`;
 }
 
 function tarjetaProducto(p) {
@@ -319,8 +329,7 @@ async function pantallaResultado(codigo, vigente) {
   const desconocidos = a.sellos.filter((s) => s.estado === '?');
   const unidad = p.esBebida ? '100 ml' : '100 g';
   const n = p.n || {};
-  const fila = (nombre, valor, u) =>
-    `<tr><td>${nombre}</td><td>${valor === null || valor === undefined ? '<span class="gris">—</span>' : esc(Math.round(valor * 10) / 10) + ' ' + u}</td></tr>`;
+  const fila = (nombre, valor, u) => `<tr><td>${nombre}</td><td>${dato(valor, u)}</td></tr>`;
 
   app.innerHTML = `
     ${barra}
@@ -376,8 +385,8 @@ async function pantallaResultado(codigo, vigente) {
       <article class="tarjeta">
         <div class="caja-puntaje">${ICONOS.hoja}<span>Puntaje nutricional</span><b>${a.puntaje ?? '—'}<small>/100</small></b></div>
         <div class="porcion">
-          <div><span>Calorías</span><b>${a.porcion.kcal ?? '—'} ${a.porcion.kcal !== null ? 'kcal' : ''}</b><small>${esc(a.porcion.etiqueta)}</small></div>
-          <div><span>Azúcares</span><b>${a.porcion.azucares ?? '—'} ${a.porcion.azucares !== null ? 'g' : ''}</b><small>${esc(a.porcion.etiqueta)}</small></div>
+          <div><span>Calorías</span><b>${dato(a.porcion.kcal, 'kcal')}</b><small>${esc(a.porcion.etiqueta)}</small></div>
+          <div><span>Azúcares</span><b>${dato(a.porcion.azucares, 'g')}</b><small>${esc(a.porcion.etiqueta)}</small></div>
         </div>
       </article>
 

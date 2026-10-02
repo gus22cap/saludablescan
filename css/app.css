@@ -767,3 +767,12 @@ details[open] summary { margin-bottom: 12px; }
 }
 .comp-pie { padding-top: 12px; }
 .btn-chico { min-height: 40px; padding: 8px 6px; font-size: 0.82rem; border-radius: 10px; }
+
+/* ---------- Etapa 4: pulido ---------- */
+.franja-oscura { background: rgba(242, 183, 5, 0.18); color: #ffe08a; }
+.sin-dato { color: var(--gris); font-weight: 400; font-size: 0.85em; font-style: italic; }
+/* Comparar: anillos alineados aunque los nombres ocupen distintos renglones */
+.comp-producto { display: flex; flex-direction: column; align-items: center; }
+.comp-producto .anillo { margin-top: auto; }
+.comp-producto small.gris { margin-bottom: 6px; }
+.comp-nivel { min-height: 2.4em; line-height: 1.2; display: flex; align-items: flex-start; justify-content: center; }

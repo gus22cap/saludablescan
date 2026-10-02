@@ -60,7 +60,7 @@ function filaNumeros(titulo, items, campo, unidad, detalle = '') {
   const hayDiferencia = conDato.length > 1 && conDato.some((v) => v !== minimo);
   return fila(titulo, items.map((i) => {
     const v = i[campo];
-    if (v === null) return '<span class="comp-celda gris">—</span>';
+    if (v === null) return '<span class="comp-celda"><span class="sin-dato">sin dato</span></span>';
     const mejor = hayDiferencia && v === minimo;
     return `<span class="comp-celda comp-numero${mejor ? ' mejor' : ''}">${String(v).replace('.', ',')} ${unidad}</span>`;
   }), detalle);

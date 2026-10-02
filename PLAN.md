@@ -59,12 +59,12 @@ Vamos **etapa por etapa**. No se pasa a la siguiente hasta probar la anterior en
 
 ---
 
-## Etapa 4 — Pulir
+## Etapa 4 — Pulir ✅
 
-- [ ] Que funcione sin internet con lo ya guardado (modo offline)
-- [ ] Ícono y pantalla de inicio de la app
-- [ ] Revisar textos, colores y tamaños en distintos celulares
-- [ ] Mostrar "sin información" cuando falte un dato, en vez de inventarlo
+- [x] Que funcione sin internet con lo ya guardado (modo offline)
+- [x] Ícono y pantalla de inicio de la app
+- [x] Revisar textos, colores y tamaños en distintos celulares
+- [x] Mostrar "sin información" cuando falte un dato, en vez de inventarlo
 
 ---
 
@@ -152,3 +152,4 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 01/10/2026 | Avisos especiales para café: torrado (según porcentaje), no es principalmente café, achicoria/cereales y saborizantes |
 | 01/10/2026 | Etapa 2: barra de navegación, perfil (cuidados, cosas a evitar, alergias, ingredientes propios), alertas roja/amarilla, puntaje personal, historial, favoritos y copia de seguridad |
 | 01/10/2026 | Etapa 3: comparar hasta 3 productos lado a lado (mejor opción, ✓/!/✗, valores por porción y cada 100 g con el mejor en verde). Se agrega desde el resultado o desde el historial |
+| 01/10/2026 | Etapa 4: íconos PNG (Android e iPhone), fotos guardadas para ver sin internet, aviso de "sin internet", pantallas revisadas a 360 px, números con coma y "sin dato" cuando falta información. Las actualizaciones llegan al reabrir la app |
