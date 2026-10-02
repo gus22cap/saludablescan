@@ -141,6 +141,9 @@ export function analizar(prod) {
     sello('sodio', 'Exceso en sodio', '?', 'Falta el dato de sodio o de calorías.');
   } else if (agregado.sodio === false) {
     sello('sodio', 'Exceso en sodio', 'no', 'Según los ingredientes, no tiene sal ni sodio agregados.');
+  } else if (agregado.sodio === null && sodio < 40) {
+    // Sin ingredientes no sabemos si le agregaron sal; con tan poco sodio, suponemos que no
+    sello('sodio', 'Exceso en sodio', 'no', `${redondear(sodio, 0)} mg cada ${unidad}: cantidad muy baja.`, true);
   } else if (bebida && kcal < 1) {
     sello('sodio', 'Exceso en sodio', sodio >= 40 ? 'si' : 'no',
       `${redondear(sodio, 0)} mg cada 100 ml (límite para bebidas sin calorías: 40 mg).`,
@@ -180,6 +183,9 @@ export function analizar(prod) {
     avisos.push('Usamos los azúcares totales porque falta el dato de azúcares añadidos. Pueden incluir el azúcar natural de la leche o la fruta.');
   }
 
+  // Casos especiales que la ley no cubre (por ahora: café torrado, mezclas y sucedáneos)
+  const especiales = evaluarCafe(prod, texto);
+
   // ---- Puntaje ----
   const motivos = [];
   let puntaje = null;
@@ -204,6 +210,11 @@ export function analizar(prod) {
       puntaje -= restaAditivos;
     }
 
+    for (const r of especiales.restas) {
+      puntaje -= r.puntos;
+      motivos.push({ puntos: -r.puntos, texto: r.texto });
+    }
+
     const fibra = num(n.fibra);
     if (fibra !== null && fibra >= 6) { puntaje += 5; motivos.push({ puntos: 5, texto: 'Buena fuente de fibra' }); }
     else if (fibra !== null && fibra >= 3) { puntaje += 3; motivos.push({ puntos: 3, texto: 'Tiene fibra' }); }
@@ -216,6 +227,10 @@ export function analizar(prod) {
     if (puntaje > tope) {
       motivos.push({ puntos: tope - Math.round(puntaje), texto: `Tope por tener ${cantSellos} octógono${cantSellos > 1 ? 's' : ''}` });
       puntaje = tope;
+    }
+    if (especiales.tope !== null && puntaje > especiales.tope) {
+      motivos.push({ puntos: especiales.tope - Math.round(puntaje), texto: especiales.motivoTope });
+      puntaje = especiales.tope;
     }
 
     puntaje = Math.max(0, Math.min(100, Math.round(puntaje)));
@@ -232,10 +247,100 @@ export function analizar(prod) {
     nivel,
     motivos,
     avisos,
-    chips: armarChips(prod, sellos, aditivos, edulcorantes),
-    resumen: armarResumen(sellos, aditivos, edulcorantes, cafeina, puntaje),
+    notas: especiales.notas,
+    chips: [...especiales.chips, ...armarChips(prod, sellos, aditivos, edulcorantes)].slice(0, 5),
+    resumen: [armarResumen(sellos, aditivos, edulcorantes, cafeina, puntaje), ...especiales.notas.map((x) => x.resumen)].join(' '),
     porcion: datosPorcion(prod),
   };
+}
+
+// ---------- Café: torrado, mezclas y productos que no son café puro ----------
+
+const PAL_CAFE = /\b(cafe|nescafe|dolca|arlistan|cappuccino|capuchino|espresso|expreso)\b/;
+// Productos que llevan café pero no son café (postres, golosinas…)
+const PAL_NO_CAFE = /\b(alfajor|galletit|helado|chocolate|bombon|licor|yogur|torta|budin|bizcocho|caramelo|turron|barra|cereal en barra)/;
+
+function primerIngrediente(texto) {
+  const limpio = texto.replace(/^\s*ingredientes?\s*:\s*/, '');
+  let nivel = 0;
+  for (let i = 0; i < limpio.length; i++) {
+    const c = limpio[i];
+    if (c === '(' || c === '[') nivel++;
+    else if (c === ')' || c === ']') nivel = Math.max(0, nivel - 1);
+    else if ((c === ',' || c === ';' || c === '.') && nivel === 0) return limpio.slice(0, i).trim();
+  }
+  return limpio.trim();
+}
+
+function evaluarCafe(prod, textoIngredientes) {
+  const resultado = { notas: [], restas: [], chips: [], tope: null, motivoTope: '' };
+  const nombre = normalizar(prod.nombre);
+  const todo = nombre + ' ' + textoIngredientes;
+  if (!PAL_CAFE.test(nombre) || PAL_NO_CAFE.test(nombre)) return resultado;
+
+  const hayIngredientes = textoIngredientes.replace(/[^a-z]/g, '').length > 5;
+
+  // 1) Torrado: café tostado con azúcar
+  // (no confundir con un "3 en 1": ahí el azúcar se agrega aparte, no en el tostado)
+  const conAzucar = /tostado con azucar|cafe tostado \([^)]*azucar/.test(textoIngredientes);
+  if (/torrad/.test(todo) || conAzucar) {
+    // Porcentaje: "30% torrado", "torrado 30%", "café torrado 50 %"
+    const m = /(\d{1,3})\s*%\s*(?:de\s+)?(?:cafe\s+)?torrad/.exec(todo) || /torrad[oa]s?\s*(?:al\s*)?\(?\s*(\d{1,3})\s*%/.exec(todo);
+    let porcentaje = m ? Math.min(100, Number(m[1])) : /mezcla/.test(todo) ? 50 : 100;
+    if (porcentaje <= 0) porcentaje = 100;
+    const estimado = !m;
+    const resta = Math.round((40 * porcentaje) / 100);
+    const textoPct = porcentaje === 100 ? 'torrado' : `${porcentaje}% torrado`;
+    resultado.restas.push({ puntos: resta, texto: `Café ${textoPct}${estimado ? ' (estimado)' : ''}` });
+    resultado.tope = 84; // nunca "muy buena opción"
+    resultado.motivoTope = 'Tope por tener café torrado';
+    resultado.chips.push({ tipo: porcentaje >= 70 ? 'mal' : 'ojo', texto: porcentaje === 100 ? 'Café torrado' : `Café ${porcentaje}% torrado` });
+    resultado.notas.push({
+      titulo: porcentaje === 100 ? 'Café torrado' : `Mezcla con ${porcentaje}% de café torrado`,
+      texto: 'El café torrado se tuesta con azúcar. Aunque no tenga octógonos (porque en la taza pasa poca azúcar), el azúcar quemada genera más compuestos del tostado, como la acrilamida. Conviene elegir café tostado natural.' +
+        (estimado ? (porcentaje === 50 ? ' No encontramos el porcentaje en los datos: suponemos una mezcla mitad y mitad.' : ' No encontramos el porcentaje en los datos: suponemos que es todo torrado.') : ''),
+      resumen: porcentaje === 100 ? 'Es café torrado (tostado con azúcar).' : `Es una mezcla con ${porcentaje}% de café torrado.`,
+    });
+  }
+
+  if (!hayIngredientes) return resultado;
+
+  // 2) ¿El ingrediente principal es café? (los ingredientes van de mayor a menor cantidad)
+  const primero = primerIngrediente(textoIngredientes);
+  if (primero && !/\bcafe\b/.test(primero)) {
+    resultado.restas.push({ puntos: 15, texto: 'No es principalmente café' });
+    resultado.chips.unshift({ tipo: 'mal', texto: 'No es principalmente café' });
+    resultado.notas.push({
+      titulo: 'No es principalmente café',
+      texto: `Los ingredientes se ordenan de mayor a menor cantidad, y el primero es "${primero}". Es un producto a base de café, no café puro.`,
+      resumen: 'No es principalmente café.',
+    });
+  }
+
+  // 3) Achicoria, cereales o malta
+  const rinde = /\b(achicoria|cebada|malta|centeno|cereales?|trigo tostado)\b/.exec(textoIngredientes);
+  if (rinde) {
+    resultado.restas.push({ puntos: 16, texto: 'Mezclado con ' + rinde[1] });
+    resultado.chips.push({ tipo: 'ojo', texto: 'Con ' + rinde[1] });
+    resultado.notas.push({
+      titulo: 'No es café puro',
+      texto: `Está mezclado con ${rinde[1]}. No es dañino, pero tiene menos café del que parece.`,
+      resumen: `Está mezclado con ${rinde[1]}.`,
+    });
+  }
+
+  // 4) Saborizantes o aromatizantes
+  if (/\b(saborizantes?|aromatizantes?|aromas?|sabor artificial|esencia)\b/.test(textoIngredientes)) {
+    resultado.restas.push({ puntos: 5, texto: 'Saborizantes o aromatizantes' });
+    resultado.chips.push({ tipo: 'ojo', texto: 'Saborizantes' });
+    resultado.notas.push({
+      titulo: 'Tiene saborizantes o aromatizantes',
+      texto: 'El sabor no viene solo del café: lleva saborizantes o aromatizantes agregados.',
+      resumen: 'Lleva saborizantes.',
+    });
+  }
+
+  return resultado;
 }
 
 export function nivelDePuntaje(p) {

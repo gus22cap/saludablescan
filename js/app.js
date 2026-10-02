@@ -250,6 +250,16 @@ async function obtener(codigo, vigente) {
   }
 }
 
+// Avisos especiales que la ley de etiquetado no cubre (ej.: café torrado)
+function tarjetaNotas(notas) {
+  if (!notas || !notas.length) return '';
+  return `
+    <article class="tarjeta notas">
+      <h3>${marca('ojo')} A tener en cuenta</h3>
+      ${notas.map((x) => `<div><b>${esc(x.titulo)}</b><p>${esc(x.texto)}</p></div>`).join('')}
+    </article>`;
+}
+
 function tarjetaProducto(p) {
   const sinNombre = !p.nombre || p.nombre === 'Producto sin nombre';
   const titulo = p.marca || (sinNombre ? 'Producto sin nombre' : p.nombre);
@@ -287,6 +297,7 @@ async function pantallaResultado(codigo, vigente) {
       ${cabecera('Resultado del análisis')}
       <div class="contenido">
         ${tarjetaProducto(p)}
+        ${tarjetaNotas(a.notas)}
         <article class="tarjeta mensaje">
           <h3 class="centrado">Faltan datos para analizarlo</h3>
           <p>Este producto está en la base, pero ${p.ingredientesTexto ? 'sin' : 'sin la lista de ingredientes ni'} la tabla nutricional, así que no podemos calcular sus octógonos ni su puntaje.</p>
@@ -324,6 +335,8 @@ async function pantallaResultado(codigo, vigente) {
           ${a.chips.map((c) => `<li>${marca(c.tipo)}<span>${esc(c.texto)}</span></li>`).join('')}
         </ul>
       </article>
+
+      ${tarjetaNotas(a.notas)}
 
       ${a.avisos.length ? `<article class="tarjeta avisos">${a.avisos.map((t) => `<p>${ICONOS.info}<span>${esc(t)}</span></p>`).join('')}</article>` : ''}
 

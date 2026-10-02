@@ -124,6 +124,13 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 - Tope: con 1 o 2 octógonos, máximo 69 (nunca "buena opción"); con 3 o más, máximo 39
 - Semáforo: 85+ muy buena · 70–84 buena · 40–69 regular · menos de 40 poco saludable
 
+**Café** (casos que la ley no cubre):
+- Torrado: resta hasta 40 puntos según el porcentaje (100 % torrado → 60, regular). Sin porcentaje: "torrado" = 100 %, "mezcla" = 50 %. Con algo de torrado, máximo 84 (nunca "muy buena")
+- Primer ingrediente que no es café: −15 ("no es principalmente café")
+- Achicoria, cebada, malta o cereales: −16
+- Saborizantes o aromatizantes: −5
+- Se muestran en una tarjeta amarilla "A tener en cuenta"
+
 ## Pendientes a verificar
 
 - [x] Valores de los octógonos (ver arriba)
@@ -142,3 +149,4 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 30/09/2026 | Si Open Food Facts no tiene el producto, se busca en Precios Claros (nombre, marca y tamaño) y se completa el formulario solo |
 | 30/09/2026 | Se reconocen productos no alimenticios (higiene, limpieza) y se mejoró la pantalla de productos sin tabla nutricional |
 | 30/09/2026 | Publicada en GitHub Pages y probada en el celular: funciona. **Próximo: comparar envases reales y seguir con la Etapa 2** |
+| 01/10/2026 | Avisos especiales para café: torrado (según porcentaje), no es principalmente café, achicoria/cereales y saborizantes |

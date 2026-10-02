@@ -591,3 +591,7 @@ details[open] summary { margin-bottom: 12px; }
 
 .mensaje .centrado { justify-content: center; }
 .mensaje p + p { margin-top: -8px; }
+
+.notas { background: var(--amarillo-claro); box-shadow: none; }
+.notas div { display: grid; gap: 4px; }
+.notas p { font-size: 0.92rem; color: #5c4a00; }
