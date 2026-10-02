@@ -93,15 +93,43 @@ A tener en cuenta:
 
 Esfuerzo estimado: paso 1 bajo, paso 2 medio.
 
-**Paso 3 (opcional) — Compartir lo que cargamos**
-- [ ] Subir a **Open Food Facts** los productos que cargamos (base colaborativa y gratuita: así le sirven a todos y la próxima vez el producto aparece solo). Requiere una cuenta gratis en Open Food Facts.
-- [ ] Más adelante, con servidor propio: tener la misma base en varios celulares o compartirla con otras personas.
+(El paso 3, compartir, pasó a ser la Etapa 7.)
+
+---
+
+## Etapa 6 — Cosmética e higiene ⬅️ *próxima*
+
+Que la app también analice shampoo, jabón, cremas, desodorantes, pasta dental, protector solar, etc. Hoy los reconoce como "no alimenticios" y no los analiza.
+
+- [ ] Buscar el producto en **Open Beauty Facts** (la base hermana de Open Food Facts para cosmética, también gratis), con Precios Claros de respaldo para nombre y marca
+- [ ] Analizar la **lista de ingredientes** (nombres INCI, los que figuran en el envase en inglés/latín: *Aqua, Sodium Laureth Sulfate, Parfum…*). En cosmética no hay tabla nutricional ni octógonos: todo sale de los ingredientes
+- [ ] Lista inicial de ingredientes a tener en cuenta, con riesgo bajo / moderado / alto y explicación simple. Por ejemplo: parabenos, ftalatos, liberadores de formaldehído, triclosán, sulfatos (SLS/SLES), fragancia/perfume (alérgenos), alcohol desnaturalizado, siliconas, aceites minerales, filtros solares como la oxibenzona
+- [ ] Puntaje 0–100 y semáforo propios de cosmética (sin octógonos), con la misma pantalla de resultado e ingredientes
+- [ ] Perfil: sumar sensibilidades de piel (fragancias, sulfatos, parabenos, alcohol, etc.) con alerta roja
+- [ ] Carga a mano: para cosmética solo nombre, marca, foto y lista de ingredientes (sin tabla nutricional)
+- [ ] Historial, favoritos y comparar también con cosméticos (comparar solo productos del mismo tipo)
+- [ ] Productos de **limpieza** (detergente, lavandina…): quedan afuera por ahora; la app sigue avisando que no los analiza
+
+A verificar: criterios de riesgo de cada ingrediente con fuentes confiables (regulación de la Unión Europea, ANMAT). Igual que con alimentos, la app es orientativa y no reemplaza a un dermatólogo.
+
+---
+
+## Etapa 7 — Compartir solo lo que yo elija
+
+Regla principal: **nada se comparte automáticamente**. Cada producto se comparte solo si el usuario lo decide, uno por uno.
+
+- [ ] En los productos cargados a mano, botón **"Compartir este producto"**
+- [ ] Antes de enviar, mostrar exactamente qué se va a compartir (nombre, marca, tabla, ingredientes, fotos) y poder destildar fotos o datos
+- [ ] Destino: **Open Food Facts** (alimentos) u **Open Beauty Facts** (cosmética). Así, la próxima vez que alguien lo escanee, aparece solo
+- [ ] Hace falta una cuenta gratis en Open Food Facts; los datos de la cuenta quedan guardados solo en el celular
+- [ ] Marcar en la app cuáles ya se compartieron
+- [ ] Nunca se comparten el perfil, las alergias, el historial ni los favoritos
 
 ---
 
 ## Para más adelante (no ahora)
 
-Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario, aportes de otros usuarios, reporte de errores, escaneo de menús, despensa con vencimientos y notificaciones.
+Servidor propio y cuentas de usuario (la misma base en varios celulares), aportes de otros usuarios, reporte de errores, escaneo de menús, despensa con vencimientos, notificaciones y lectura de la tabla nutricional con inteligencia artificial.
 
 ---
 
@@ -156,3 +184,4 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 01/10/2026 | Etapa 4: íconos PNG (Android e iPhone), fotos guardadas para ver sin internet, aviso de "sin internet", pantallas revisadas a 360 px, números con coma y "sin dato" cuando falta información. Las actualizaciones llegan al reabrir la app |
 | 01/10/2026 | Etapa 5: fotos del envase guardadas como "pendientes" (Historial → Para completar), foto fija arriba del formulario con visor para acercar, y lectura automática de tabla e ingredientes con Tesseract (8 de 8 datos en fotos de prueba, también torcidas y borrosas) |
 | 01/10/2026 | Probado con una foto real: la lectura de la tabla no sirve y se sacó. Formulario rediseñado como la tabla del envase (mismo orden, porción en g o ml, "Siguiente" pasa al renglón de abajo). Productos exceptuados por ley (aceites, azúcar, sal, frutos secos) sin octógonos y con aviso |
+| 01/10/2026 | Próximos pasos definidos: Etapa 6 (cosmética e higiene) y Etapa 7 (compartir solo los productos que el usuario elija) |
