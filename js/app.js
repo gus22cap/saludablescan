@@ -594,28 +594,30 @@ async function pantallaIngredientes(codigo, vigente) {
 
 // ---------- Pantalla 4: Cargar o completar un producto a mano ----------
 
+// Renglones en el mismo orden que la tabla nutricional argentina.
+// (Carbohidratos y grasas trans no se piden: no hacen falta para el análisis.)
 const CAMPOS_NUTRI = [
-  { id: 'kcal', nombre: 'Calorías', unidad: 'kcal', obligatorio: true },
+  { id: 'kcal', nombre: 'Valor energético', unidad: 'kcal', obligatorio: true, ayuda: 'el número que va con "kcal"' },
   { id: 'azucares', nombre: 'Azúcares totales', unidad: 'g' },
   { id: 'azucaresAnadidos', nombre: 'Azúcares añadidos', unidad: 'g' },
+  { id: 'proteinas', nombre: 'Proteínas', unidad: 'g', opcional: true },
   { id: 'grasas', nombre: 'Grasas totales', unidad: 'g' },
   { id: 'saturadas', nombre: 'Grasas saturadas', unidad: 'g' },
+  { id: 'fibra', nombre: 'Fibra alimentaria', unidad: 'g', opcional: true },
   { id: 'sodioMg', nombre: 'Sodio', unidad: 'mg' },
-  { id: 'fibra', nombre: 'Fibra', unidad: 'g' },
-  { id: 'proteinas', nombre: 'Proteínas', unidad: 'g' },
 ];
 
-// ---------- Lectura automática de la foto (tabla e ingredientes) ----------
+// ---------- Lectura automática de los ingredientes ----------
+// (La tabla nutricional no se lee automáticamente: con fotos reales el lector gratuito no es confiable.)
 
-// Botón para leer la tabla o los ingredientes: usa la foto guardada si hay, o pide una nueva
+// Botón para leer los ingredientes: usa la foto guardada si hay, o pide una nueva
 function botonLeer(tipo, pendiente) {
-  const que = tipo === 'tabla' ? 'la tabla' : 'los ingredientes';
   const guardada = pendiente?.fotos[tipo];
   return `
     <div class="leer-foto" data-leer="${tipo}">
       ${guardada
-        ? `<button class="btn btn-leer" type="button" data-usar-guardada>✨ Leer ${que} de tu foto</button>`
-        : `<label class="btn btn-leer">📷 Leer ${que} con la cámara<input type="file" accept="image/*" capture="environment" hidden></label>`}
+        ? '<button class="btn btn-leer" type="button" data-usar-guardada>✨ Intentar leer los ingredientes de tu foto</button>'
+        : '<label class="btn btn-leer">📷 Intentar leer los ingredientes con la cámara<input type="file" accept="image/*" capture="environment" hidden></label>'}
       <p class="leer-estado" hidden></p>
     </div>`;
 }
@@ -634,38 +636,17 @@ function conectarLectura(form, pendiente) {
       const boton = caja.querySelector('.btn-leer');
       boton.classList.add('ocupado');
       try {
-        const { leerTextoDeFoto, interpretarTabla, interpretarIngredientes } = await import('./lector-texto.js');
+        const { leerTextoDeFoto, interpretarIngredientes } = await import('./lector-texto.js');
         const texto = await leerTextoDeFoto(src, (msj, pct) => mostrar(pct ? `${msj} ${pct}%` : msj));
-        if (tipo === 'tabla') {
-          const r = interpretarTabla(texto);
-          if (!r.encontrados) {
-            mostrar('No pudimos leer la tabla. Probá con una foto más nítida, de frente y con buena luz, o copiá los números.', 'mal');
-            return;
-          }
-          form.querySelectorAll('.leido').forEach((x) => x.classList.remove('leido'));
-          for (const [campo, v] of Object.entries(r.valores)) {
-            const input = form.querySelector(`[name="${campo}"]`);
-            input.value = String(v).replace('.', ',');
-            input.classList.add('leido');
-          }
-          form.querySelector(`[name="base"][value="${r.base}"]`).checked = true;
-          if (r.porcion) {
-            const input = form.querySelector('[name="porcion"]');
-            input.value = String(r.porcion).replace('.', ',');
-            input.classList.add('leido');
-          }
-          mostrar(`Leímos ${r.encontrados} de ${CAMPOS_NUTRI.length} datos (marcados en verde). Revisalos con la foto antes de guardar: la lectura puede equivocarse.`, 'bien');
-        } else {
-          const ingredientes = interpretarIngredientes(texto);
-          if (ingredientes.replace(/[^a-záéíóúñ]/gi, '').length < 8) {
-            mostrar('No pudimos leer los ingredientes. Probá con una foto más nítida y con buena luz, o copialos a mano.', 'mal');
-            return;
-          }
-          const area = form.querySelector('[name="ingredientes"]');
-          area.value = ingredientes;
-          area.classList.add('leido');
-          mostrar('Listo. Revisá el texto con la foto y corregí lo que haga falta antes de guardar.', 'bien');
+        const ingredientes = interpretarIngredientes(texto);
+        if (ingredientes.replace(/[^a-záéíóúñ]/gi, '').length < 8) {
+          mostrar('No pudimos leer los ingredientes. Probá con una foto más de cerca, de frente y con buena luz, o copialos a mano.', 'mal');
+          return;
         }
+        const area = form.querySelector('[name="ingredientes"]');
+        area.value = ingredientes;
+        area.classList.add('leido');
+        mostrar('Listo. Revisá el texto con la foto y corregí lo que haga falta antes de guardar.', 'bien');
       } catch (err) {
         console.error(err);
         mostrar(navigator.onLine
@@ -708,6 +689,11 @@ async function pantallaCargar(codigo, vigente) {
   const volver = previo ? '#/p/' + codigo : pendiente ? '#/pendientes' : '#/';
   const valor = (x) => (x === null || x === undefined ? '' : String(Math.round(x * 10) / 10).replace('.', ','));
   let foto = p.imagen || pendiente?.fotos.frente || null;
+  // Al editar, si conocemos la porción mostramos los valores por porción (como en el envase)
+  const porcionGuardada = Number(p.porcion?.cantidad) || null;
+  const mostrarPorPorcion = !previo || !!porcionGuardada;
+  const inicial = (v) => (v === null || v === undefined ? null : mostrarPorPorcion && porcionGuardada ? (v * porcionGuardada) / 100 : v);
+  const unidadPorcion = p.porcion?.unidad || (p.esBebida ? 'ml' : 'g');
 
   app.innerHTML = `
     ${cabecera(previo ? 'Completar datos' : 'Cargar producto', volver)}
@@ -731,22 +717,36 @@ async function pantallaCargar(codigo, vigente) {
       </article>
 
       <article class="tarjeta">
-        <h3>Tabla nutricional</h3>
-        ${botonLeer('tabla', pendiente)}
-        <p class="gris chico">Copiá los números de la tabla del envase. Los que no figuren, dejalos vacíos.</p>
-        <fieldset class="opciones">
-          <legend>Los valores que vas a cargar son:</legend>
-          <label><input type="radio" name="base" value="porcion" ${!previo ? 'checked' : ''}> Por porción</label>
-          <label><input type="radio" name="base" value="100" ${previo ? 'checked' : ''}> Cada 100 g / ml</label>
-        </fieldset>
-        <label>Tamaño de la porción (g o ml)<input name="porcion" inputmode="decimal" value="${valor(p.porcion?.cantidad)}" placeholder="Ej.: 125"></label>
-        <div class="grilla">
+        <h3>Información nutricional</h3>
+        <p class="gris chico">Copiá renglón por renglón, igual que en el envase. Carbohidratos y grasas trans no hacen falta. Si un renglón no está, dejalo vacío.</p>
+
+        <div class="tabla-carga">
+          <div class="tabla-carga-porcion">
+            <span>Porción</span>
+            <input name="porcion" inputmode="decimal" enterkeyhint="next" value="${valor(porcionGuardada)}" placeholder="ej. 30" aria-label="Tamaño de la porción">
+            <select name="unidadPorcion" aria-label="Unidad de la porción">
+              <option value="g" ${unidadPorcion === 'g' ? 'selected' : ''}>g</option>
+              <option value="ml" ${unidadPorcion === 'ml' ? 'selected' : ''}>ml</option>
+            </select>
+          </div>
+          <p class="tabla-carga-ayuda">Ej.: "Porción: 13 ml (1 cuchara de sopa)" → 13 ml</p>
+
+          <fieldset class="tabla-carga-base">
+            <legend class="sr-solo">Los valores son</legend>
+            <label><input type="radio" name="base" value="porcion" ${mostrarPorPorcion ? 'checked' : ''}> Cant. por porción</label>
+            <label><input type="radio" name="base" value="100" ${mostrarPorPorcion ? '' : 'checked'}> Cada 100 g / ml</label>
+          </fieldset>
+
           ${CAMPOS_NUTRI.map((c) => `
-            <label>${c.nombre}${c.obligatorio ? ' *' : ''} <small>(${c.unidad})</small>
-              <input name="${c.id}" inputmode="decimal" value="${valor(p.n?.[c.id])}">
+            <label class="tabla-carga-fila${c.opcional ? ' opcional' : ''}">
+              <span>${c.nombre}${c.obligatorio ? ' <b class="obligatorio">*</b>' : ''}${c.opcional ? ' <small>(opcional)</small>' : ''}${c.ayuda ? `<small class="bloque">${c.ayuda}</small>` : ''}</span>
+              <span class="tabla-carga-valor">
+                <input name="${c.id}" inputmode="decimal" enterkeyhint="next" value="${valor(inicial(p.n?.[c.id]))}">
+                <i>${c.unidad}</i>
+              </span>
             </label>`).join('')}
         </div>
-        <p class="gris chico">Si la tabla trae el sodio en gramos, multiplicalo por 1000 (ej.: 0,3 g = 300 mg).</p>
+        <p class="gris chico">Si el sodio figura en gramos, multiplicalo por 1000 (0,3 g = 300 mg).</p>
       </article>
 
       <article class="tarjeta">
@@ -767,6 +767,17 @@ async function pantallaCargar(codigo, vigente) {
   const form = document.getElementById('form-cargar');
   if (pendiente) conectarPanelFotos(pendiente);
   conectarLectura(form, pendiente);
+
+  // "Siguiente" en el teclado pasa al próximo número (en vez de enviar el formulario)
+  const numeros = [...form.querySelectorAll('input[inputmode="decimal"]')];
+  numeros.forEach((input, i) =>
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      if (numeros[i + 1]) numeros[i + 1].focus();
+      else form.querySelector('[name="ingredientes"]').focus();
+    })
+  );
 
   document.getElementById('foto-producto').addEventListener('change', async (e) => {
     const archivo = e.target.files[0];
@@ -798,7 +809,7 @@ async function pantallaCargar(codigo, vigente) {
     const porPorcion = datos.get('base') === 'porcion';
     if (!nombre) return error('Falta el nombre del producto.');
     if (numero('kcal') === null) return error('Faltan las calorías: son necesarias para calcular los octógonos.');
-    if (porPorcion && !(porcion > 0)) return error('Si cargás los valores por porción, indicá de cuántos gramos o ml es la porción.');
+    if (porPorcion && !(porcion > 0)) return error('Falta el tamaño de la porción (el número que figura arriba de la tabla, por ejemplo "Porción: 13 ml").');
 
     const factor = porPorcion ? 100 / porcion : 1;
     const n = {};
@@ -816,7 +827,7 @@ async function pantallaCargar(codigo, vigente) {
       cantidad: String(datos.get('cantidad') || '').trim(),
       imagen: foto,
       esBebida: datos.get('tipo') === 'bebida',
-      porcion: porcion > 0 ? { cantidad: porcion, texto: '' } : null,
+      porcion: porcion > 0 ? { cantidad: porcion, unidad: datos.get('unidadPorcion') || 'g', texto: '' } : null,
       n,
       ingredientesTexto: String(datos.get('ingredientes') || '').trim(),
     };

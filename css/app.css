@@ -882,3 +882,58 @@ details[open] summary { margin-bottom: 12px; }
 .leer-estado.bien { background: var(--verde-claro); color: var(--verde-oscuro); }
 .leer-estado.mal { background: var(--rojo-claro); color: #a32020; }
 .formulario input.leido, .formulario textarea.leido { border-color: var(--verde) !important; background: #f1fbf4 !important; }
+
+/* ---------- Formulario con forma de tabla nutricional ---------- */
+.sr-solo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.tabla-carga { border: 2px solid #2b3a31; border-radius: 12px; overflow: hidden; background: #fff; }
+.tabla-carga-porcion {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 4px;
+  font-weight: 800;
+}
+.tabla-carga-porcion input { text-align: right; font-weight: 700; }
+.tabla-carga-porcion select {
+  font: inherit;
+  font-size: 16px;
+  padding: 11px 8px;
+  border: 1.5px solid var(--linea);
+  border-radius: 10px;
+  background: #fbfdfc;
+}
+.tabla-carga-ayuda { padding: 0 12px 8px; font-size: 0.75rem; color: var(--gris); border-bottom: 2px solid #2b3a31; }
+.tabla-carga-base { border: 0; margin: 0; padding: 8px 10px; display: flex; gap: 6px; border-bottom: 1.5px solid #2b3a31; background: #f6f8f7; }
+.tabla-carga-base label {
+  flex: 1;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  padding: 8px 4px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.tabla-carga-base label:has(input:checked) { background: var(--verde); color: #fff; }
+.tabla-carga-base input { accent-color: #fff; margin: 0; }
+.formulario .tabla-carga-fila {
+  display: grid !important;
+  grid-template-columns: 1fr 128px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 12px;
+  border-bottom: 1px solid #d7ddd9;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.tabla-carga-fila:last-child { border-bottom: 0; }
+.tabla-carga-fila.opcional { color: var(--gris); font-weight: 500; }
+.tabla-carga-fila small { font-weight: 400; font-size: 0.75rem; color: var(--gris); }
+.tabla-carga-fila small.bloque { display: block; }
+.tabla-carga-fila .obligatorio { color: var(--rojo); }
+.tabla-carga-valor { position: relative; display: block; }
+.formulario .tabla-carga-valor input { padding: 10px 40px 10px 10px !important; text-align: right; font-weight: 700 !important; }
+.tabla-carga-valor i { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 0.82rem; color: var(--gris); pointer-events: none; }

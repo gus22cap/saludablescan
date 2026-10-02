@@ -105,7 +105,7 @@ export function evaluarParaMi(prod, analisis, perfil) {
       const c = CUIDADOS.find((x) => x.id === id);
       if (!c) continue;
       const sellos = [].concat(c.sello);
-      if (analisis.sellos.some((s) => sellos.includes(s.clave) && s.estado === 'si')) {
+      if ((analisis.sellosCalculados || analisis.sellos).some((s) => sellos.includes(s.clave) && s.estado === 'si')) {
         resultado.restas.push({ puntos: c.resta, texto: c.texto });
       }
     }

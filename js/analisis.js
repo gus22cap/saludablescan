@@ -186,6 +186,24 @@ export function analizar(prod) {
   // Casos especiales que la ley no cubre (por ahora: café torrado, mezclas y sucedáneos)
   const especiales = evaluarCafe(prod, texto);
 
+  // Productos que la ley exceptúa de los octógonos (azúcar, aceites, sal, frutos secos).
+  // En pantalla no mostramos sellos (igual que el envase), pero el puntaje sigue teniendo en cuenta los excesos.
+  const exento = productoExento(prod, texto);
+  let sellosEnvase = sellos;
+  if (exento) {
+    sellosEnvase = sellos.map((s) => (s.estado === 'si'
+      ? { ...s, estado: 'no', detalle: `Por ley no lleva octógonos (${exento.motivo}). Según la tabla: ${s.detalle}` }
+      : s));
+    if (sellos.some((s) => s.estado === 'si')) {
+      const excesos = sellos.filter((s) => s.estado === 'si').map((s) => s.titulo.replace('Exceso en ', ''));
+      especiales.notas.push({
+        titulo: 'Sin octógonos por ley, pero con excesos',
+        texto: `La ley de etiquetado no les exige octógonos a ${exento.motivo}. Igual, según su tabla nutricional, tiene mucho de: ${listar(excesos)}. Usalo con moderación.`,
+        resumen: 'La ley lo exceptúa de los octógonos.',
+      });
+    }
+  }
+
   // ---- Puntaje ----
   const motivos = [];
   let puntaje = null;
@@ -223,7 +241,8 @@ export function analizar(prod) {
 
     // Con octógonos nunca es "buena opción"; con 3 o más, siempre es "poco saludable".
     const cantSellos = sellos.filter((s) => s.estado === 'si').length;
-    const tope = cantSellos >= 3 ? 39 : cantSellos >= 1 ? 69 : 100;
+    // Exceptuados por ley (aceite, azúcar, sal, frutos secos): como mucho "Regular", nunca castigados como un procesado
+    const tope = cantSellos === 0 ? 100 : exento ? 69 : cantSellos >= 3 ? 39 : 69;
     if (puntaje > tope) {
       motivos.push({ puntos: tope - Math.round(puntaje), texto: `Tope por tener ${cantSellos} octógono${cantSellos > 1 ? 's' : ''}` });
       puntaje = tope;
@@ -239,8 +258,9 @@ export function analizar(prod) {
   const nivel = nivelDePuntaje(puntaje);
 
   return {
-    sellos,
-    sellosActivos: sellos.filter((s) => s.estado === 'si'),
+    sellos: sellosEnvase, // como deberían figurar en el envase
+    sellosCalculados: sellos, // según la tabla, aunque la ley lo exceptúe (para puntaje y perfil)
+    sellosActivos: sellosEnvase.filter((s) => s.estado === 'si'),
     leyendas: { edulcorantes, cafeina },
     aditivos,
     puntaje,
@@ -252,6 +272,40 @@ export function analizar(prod) {
     resumen: [armarResumen(sellos, aditivos, edulcorantes, cafeina, puntaje), ...especiales.notas.map((x) => x.resumen)].join(' '),
     porcion: datosPorcion(prod),
   };
+}
+
+// ---------- Productos exceptuados de los octógonos por la Ley 27.642 ----------
+// Azúcar común, aceites vegetales, frutos secos y sal común de mesa (de un solo ingrediente).
+
+const EXENTOS = [
+  { motivo: 'los aceites vegetales', ingrediente: /^aceite (de |vegetal|virgen|extra|puro|100)[a-z0-9 %]*$/, nombre: /^aceite (de |vegetal|virgen|extra|puro|mezcla)/ },
+  { motivo: 'el azúcar común', ingrediente: /^azucar( (comun|blanca|refinada|rubia|mascabo|organica|integral|impalpable))*$/, nombre: /^azucar\b(?!.*(caramelo|chocolate|galletit))/ },
+  { motivo: 'la sal común de mesa', ingrediente: /^sal\b( (fina|gruesa|entrefina|comun|de mesa|marina|del himalaya|parrillera))*/, nombre: /^sal\b( (fina|gruesa|entrefina|comun|de mesa|marina|del himalaya|parrillera|light))*\b/ },
+  {
+    motivo: 'los frutos secos',
+    ingrediente: /^(nueces|nuez|almendras?|avellanas?|castanas de caju|caju|pistachos?|mani|pecan|macadamia|nueces de pecan)( (peladas?|enteras?|naturales?|tostad[oa]s?|sin sal|crud[oa]s?|en mitades|mariposa))*$/,
+    nombre: /^(nueces|nuez|almendras|avellanas|castanas|caju|pistachos|mani)\b(?!.*(salad|confitad|bañad|banad|chocolate|garrapiñ|garrapin|japones))/,
+  },
+];
+
+// Lo que se le puede agregar sin dejar de ser "aceite" o "sal de mesa": aditivos y fortificantes
+const SOLO_ADITIVO = /^(antioxidantes?|antiaglutinantes?|yodato|ioduro|yodo|fluor|fluoruro|vitaminas?|tocoferol|tbhq|bht|bha|ins|e ?\d{3}|\d{3})\b/;
+
+function productoExento(prod, textoIngredientes) {
+  const ingredientes = textoIngredientes
+    .replace(/^\s*ingredientes?\s*:\s*/, '')
+    .replace(/\(.*?\)/g, ' ')
+    .replace(/[.;]\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const partes = ingredientes.split(/[,;]/).map((s) => s.replace(/^.*?:\s*/, '').trim()).filter(Boolean);
+  const nombre = normalizar(prod.nombre).trim();
+  for (const e of EXENTOS) {
+    if (partes.length && e.ingrediente.test(partes[0]) && partes.slice(1).every((x) => SOLO_ADITIVO.test(x))) return e;
+    // Sin lista de ingredientes, nos guiamos por el nombre
+    if (!ingredientes && e.nombre.test(nombre)) return e;
+  }
+  return null;
 }
 
 // ---------- Café: torrado, mezclas y productos que no son café puro ----------
@@ -394,7 +448,7 @@ function listar(items) {
 function datosPorcion(prod) {
   const n = prod.n || {};
   const cant = num(prod.porcion?.cantidad);
-  const unidad = prod.esBebida ? 'ml' : 'g';
+  const unidad = prod.porcion?.unidad || (prod.esBebida ? 'ml' : 'g');
   if (cant && cant > 0) {
     const f = cant / 100;
     return {

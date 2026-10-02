@@ -80,7 +80,7 @@ Objetivo: ir armando nuestra propia base de productos en el celular, con el meno
 **Paso 2 — Que la app lea la foto sola**, gratis y sin servidor, con la librería **Tesseract** (lee texto de fotos dentro del celular)
 
 - [x] Botón **"Leer ingredientes con la cámara"**: pasa el texto de la foto al campo de ingredientes (de ahí salen aditivos, edulcorantes, cafeína y si tiene azúcar, grasa o sal agregadas)
-- [x] Botón **"Leer tabla con la cámara"**: intenta reconocer calorías, azúcares, grasas, saturadas, sodio, fibra, proteínas y la porción
+- [ ] ~~Botón "Leer tabla con la cámara"~~ → **se sacó**: con fotos reales (envases curvos, rayas, fondos de color) el lector gratuito no leyó ningún número. Queda como opción futura leerla con inteligencia artificial (paga, ~US$ 0,003 por foto con Claude Haiku 4.5, necesita un pequeño servidor)
 - [x] El usuario siempre revisa y corrige antes de guardar
 - [x] Consejos en pantalla para una buena foto (luz, sin reflejos, de frente)
 - [x] Poder leer también las fotos de los productos pendientes que ya se guardaron
@@ -114,6 +114,7 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 - Sodio: ≥ 1 mg por kcal, o ≥ 300 mg cada 100 g/ml (bebidas sin calorías: ≥ 40 mg cada 100 ml)
 - Calorías: ≥ 275 kcal cada 100 g o ≥ 25 kcal cada 100 ml, y solo si además tiene exceso de azúcares o grasas
 - Los sellos solo se ponen si al producto se le **agregó** azúcar, grasa o sal (se mira la lista de ingredientes). Si no hay ingredientes, se supone que sí y se avisa.
+- Exceptuados por ley (sin octógonos): azúcar común, aceites vegetales, frutos secos y sal común de mesa. La app no muestra sellos, avisa que igual tienen excesos y su puntaje queda como máximo en "Regular"
 - Si falta el dato de azúcares añadidos, se usan los totales y se marca "estimado".
 
 **Puntaje** (empieza en 100):
@@ -154,3 +155,4 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 01/10/2026 | Etapa 3: comparar hasta 3 productos lado a lado (mejor opción, ✓/!/✗, valores por porción y cada 100 g con el mejor en verde). Se agrega desde el resultado o desde el historial |
 | 01/10/2026 | Etapa 4: íconos PNG (Android e iPhone), fotos guardadas para ver sin internet, aviso de "sin internet", pantallas revisadas a 360 px, números con coma y "sin dato" cuando falta información. Las actualizaciones llegan al reabrir la app |
 | 01/10/2026 | Etapa 5: fotos del envase guardadas como "pendientes" (Historial → Para completar), foto fija arriba del formulario con visor para acercar, y lectura automática de tabla e ingredientes con Tesseract (8 de 8 datos en fotos de prueba, también torcidas y borrosas) |
+| 01/10/2026 | Probado con una foto real: la lectura de la tabla no sirve y se sacó. Formulario rediseñado como la tabla del envase (mismo orden, porción en g o ml, "Siguiente" pasa al renglón de abajo). Productos exceptuados por ley (aceites, azúcar, sal, frutos secos) sin octógonos y con aviso |
