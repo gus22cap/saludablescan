@@ -1,14 +1,15 @@
 // SaludableScan — pantallas y navegación.
 import { buscarProducto, buscarEnPreciosClaros, codigoValido } from './api.js';
-import { guardarProducto, leerProducto, registrarEscaneo, esFavorito, alternarFavorito, leerPerfil, agregarAComparacion, leerComparacion, MAX_COMPARAR } from './db.js';
+import { guardarProducto, leerProducto, registrarEscaneo, esFavorito, alternarFavorito, leerPerfil, agregarAComparacion, leerComparacion, MAX_COMPARAR, leerPendiente, borrarPendiente } from './db.js';
 import { analizar, nivelDePuntaje } from './analisis.js';
 import { evaluarParaMi, perfilActivo } from './perfil.js';
 import { iniciarEscaner, detenerEscaner, linterna, leerDesdeFoto } from './escaner.js';
 import { pantallaHistorial, pantallaFavoritos, pantallaPerfil } from './personal.js';
 import { pantallaComparar } from './comparar.js';
+import { pantallaFotos, pantallaPendientes, panelFotos, conectarPanelFotos, achicarFoto } from './fotos.js';
 import {
   esc, ICONOS, marca, anillo, octogono, leyenda, aviso, riesgoATipo, TEXTO_RIESGO,
-  modo, cabecera, cargando, navegacion,
+  modo, cabecera, cargando, navegacion, fechaRelativa,
 } from './ui.js';
 
 const app = document.getElementById('app');
@@ -45,6 +46,8 @@ async function router() {
     if (seccion === 'favoritos') return await pantallaFavoritos(vigente);
     if (seccion === 'perfil') return await pantallaPerfil(vigente);
     if (seccion === 'comparar') return await pantallaComparar(vigente);
+    if (seccion === 'fotos' && codigo) return await pantallaFotos(codigo, vigente);
+    if (seccion === 'pendientes') return await pantallaPendientes(vigente);
     // "#/escanear" prende la cámara de una; al abrir la app ("#/") espera a que el usuario la prenda
     return pantallaEscanear(seccion === 'escanear');
   } catch (err) {
@@ -207,13 +210,26 @@ function mensajeErrorCamara(err) {
 
 // ---------- Pantalla 2: Resultado ----------
 
+// Si el producto tiene fotos guardadas para completar, lo recuerda. Devuelve true si mostró el mensaje.
+async function mensajePendiente(codigo, vigente) {
+  const pendiente = await leerPendiente(codigo);
+  if (!pendiente || !vigente()) return false;
+  pantallaMensaje('Te falta completarlo',
+    `${pendiente.nombre ? `<b>${esc(pendiente.nombre)}</b><br><br>` : ''}` +
+    `Ya le sacaste fotos al envase (${fechaRelativa(pendiente.fecha).toLowerCase()}). Completá los datos mirando las fotos y vas a ver su análisis.`,
+    [{ texto: 'Completar ahora', href: '#/cargar/' + codigo }, { texto: 'Cambiar las fotos', href: '#/fotos/' + codigo }, { texto: 'Escanear otro', href: '#/escanear' }]);
+  return true;
+}
+
 async function obtener(codigo, vigente) {
   try {
     const r = await buscarProducto(codigo);
     if (!vigente()) return null;
     if (!r.producto) {
+      if (await mensajePendiente(codigo, vigente)) return null;
       const conocido = await buscarEnPreciosClaros(codigo);
       if (!vigente()) return null;
+      const fotos = { texto: '📷 Sacar fotos y completar después', href: '#/fotos/' + codigo };
       if (conocido && conocido.noEsAlimento) {
         pantallaMensaje('Producto no alimenticio',
           `Encontramos el producto:<br><b>${esc(conocido.nombre)}</b><br><br>` +
@@ -226,16 +242,17 @@ async function obtener(codigo, vigente) {
           `${conocido.marca ? '<br>' + esc(conocido.marca) : ''}<br><br>` +
           'Pero todavía nadie cargó su tabla nutricional. Si tenés el envase a mano, copiala en un minuto ' +
           '(el nombre y la marca ya quedan completos) y queda guardado en tu celular.',
-          [{ texto: 'Cargar tabla nutricional', href: '#/cargar/' + codigo }, { texto: 'Escanear otro', href: '#/escanear' }]);
+          [{ texto: 'Cargar tabla nutricional', href: '#/cargar/' + codigo }, fotos, { texto: 'Escanear otro', href: '#/escanear' }]);
       } else {
         pantallaMensaje('Producto no encontrado',
           `No encontramos el código <b>${esc(codigo)}</b>.<br><br>Si tenés el envase a mano, cargalo vos en un minuto: queda guardado en tu celular.`,
-          [{ texto: 'Cargarlo a mano', href: '#/cargar/' + codigo }, { texto: 'Escanear otro', href: '#/escanear' }]);
+          [{ texto: 'Cargarlo a mano', href: '#/cargar/' + codigo }, fotos, { texto: 'Escanear otro', href: '#/escanear' }]);
       }
       return null;
     }
     return r;
   } catch {
+    if (await mensajePendiente(codigo, vigente)) return null;
     if (vigente()) {
       pantallaMensaje(navigator.onLine ? 'No se pudo buscar' : 'Sin internet',
         navigator.onLine
@@ -304,6 +321,8 @@ async function pantallaResultado(codigo, vigente) {
   // Sin tabla nutricional no hay análisis posible: mostramos lo que hay y pedimos completarla
   if (a.puntaje === null) {
     const aModerar = a.aditivos.filter((x) => x.r === 'alto' || x.r === 'moderado');
+    const pendiente = await leerPendiente(codigo);
+    if (!vigente()) return;
     app.innerHTML = `
       ${barra}
       <div class="contenido">
@@ -313,9 +332,12 @@ async function pantallaResultado(codigo, vigente) {
         <article class="tarjeta mensaje">
           <h3 class="centrado">Faltan datos para analizarlo</h3>
           <p>Este producto está en la base, pero ${p.ingredientesTexto ? 'sin' : 'sin la lista de ingredientes ni'} la tabla nutricional, así que no podemos calcular sus octógonos ni su puntaje.</p>
-          <p>Si tenés el envase a mano, copiá la tabla en un minuto y queda guardado en tu celular.</p>
+          <p>${pendiente
+            ? `Ya le sacaste fotos al envase (${fechaRelativa(pendiente.fecha).toLowerCase()}): completá los datos mirándolas.`
+            : 'Si tenés el envase a mano, copiá la tabla en un minuto y queda guardado en tu celular.'}</p>
           <div class="botones">
-            <a class="btn btn-verde" href="#/cargar/${codigo}">Completar con el envase</a>
+            <a class="btn btn-verde" href="#/cargar/${codigo}">${pendiente ? 'Completar ahora (con tus fotos)' : 'Completar con el envase'}</a>
+            ${pendiente ? '' : `<a class="btn btn-borde" href="#/fotos/${codigo}">📷 Sacar fotos y completar después</a>`}
             ${p.ingredientesTexto ? `<a class="btn btn-borde" href="#/p/${codigo}/ingredientes">Ver ingredientes y aditivos${aModerar.length ? ` (${aModerar.length} a moderar)` : ''}</a>` : ''}
             <a class="btn btn-texto" href="#/escanear">Escanear otro producto</a>
           </div>
@@ -583,21 +605,113 @@ const CAMPOS_NUTRI = [
   { id: 'proteinas', nombre: 'Proteínas', unidad: 'g' },
 ];
 
+// ---------- Lectura automática de la foto (tabla e ingredientes) ----------
+
+// Botón para leer la tabla o los ingredientes: usa la foto guardada si hay, o pide una nueva
+function botonLeer(tipo, pendiente) {
+  const que = tipo === 'tabla' ? 'la tabla' : 'los ingredientes';
+  const guardada = pendiente?.fotos[tipo];
+  return `
+    <div class="leer-foto" data-leer="${tipo}">
+      ${guardada
+        ? `<button class="btn btn-leer" type="button" data-usar-guardada>✨ Leer ${que} de tu foto</button>`
+        : `<label class="btn btn-leer">📷 Leer ${que} con la cámara<input type="file" accept="image/*" capture="environment" hidden></label>`}
+      <p class="leer-estado" hidden></p>
+    </div>`;
+}
+
+function conectarLectura(form, pendiente) {
+  form.querySelectorAll('[data-leer]').forEach((caja) => {
+    const tipo = caja.dataset.leer;
+    const estado = caja.querySelector('.leer-estado');
+    const mostrar = (texto, clase = '') => {
+      estado.hidden = false;
+      estado.className = 'leer-estado ' + clase;
+      estado.textContent = texto;
+    };
+
+    const leer = async (src) => {
+      const boton = caja.querySelector('.btn-leer');
+      boton.classList.add('ocupado');
+      try {
+        const { leerTextoDeFoto, interpretarTabla, interpretarIngredientes } = await import('./lector-texto.js');
+        const texto = await leerTextoDeFoto(src, (msj, pct) => mostrar(pct ? `${msj} ${pct}%` : msj));
+        if (tipo === 'tabla') {
+          const r = interpretarTabla(texto);
+          if (!r.encontrados) {
+            mostrar('No pudimos leer la tabla. Probá con una foto más nítida, de frente y con buena luz, o copiá los números.', 'mal');
+            return;
+          }
+          form.querySelectorAll('.leido').forEach((x) => x.classList.remove('leido'));
+          for (const [campo, v] of Object.entries(r.valores)) {
+            const input = form.querySelector(`[name="${campo}"]`);
+            input.value = String(v).replace('.', ',');
+            input.classList.add('leido');
+          }
+          form.querySelector(`[name="base"][value="${r.base}"]`).checked = true;
+          if (r.porcion) {
+            const input = form.querySelector('[name="porcion"]');
+            input.value = String(r.porcion).replace('.', ',');
+            input.classList.add('leido');
+          }
+          mostrar(`Leímos ${r.encontrados} de ${CAMPOS_NUTRI.length} datos (marcados en verde). Revisalos con la foto antes de guardar: la lectura puede equivocarse.`, 'bien');
+        } else {
+          const ingredientes = interpretarIngredientes(texto);
+          if (ingredientes.replace(/[^a-záéíóúñ]/gi, '').length < 8) {
+            mostrar('No pudimos leer los ingredientes. Probá con una foto más nítida y con buena luz, o copialos a mano.', 'mal');
+            return;
+          }
+          const area = form.querySelector('[name="ingredientes"]');
+          area.value = ingredientes;
+          area.classList.add('leido');
+          mostrar('Listo. Revisá el texto con la foto y corregí lo que haga falta antes de guardar.', 'bien');
+        }
+      } catch (err) {
+        console.error(err);
+        mostrar(navigator.onLine
+          ? 'No se pudo leer la foto. Probá de nuevo en un rato.'
+          : 'La primera vez hace falta internet para preparar el lector.', 'mal');
+      } finally {
+        boton.classList.remove('ocupado');
+      }
+    };
+
+    const guardada = caja.querySelector('[data-usar-guardada]');
+    if (guardada) guardada.addEventListener('click', () => leer(pendiente.fotos[tipo]));
+    const input = caja.querySelector('input[type="file"]');
+    if (input) {
+      input.addEventListener('change', async (e) => {
+        const archivo = e.target.files[0];
+        if (!archivo) return;
+        leer(await achicarFoto(archivo, 1600, 0.9));
+      });
+    }
+  });
+}
+
 async function pantallaCargar(codigo, vigente) {
   modo(false);
   app.innerHTML = cabecera('Cargar producto') + cargando('Preparando el formulario…');
-  const previo = await leerProducto(codigo);
+  const [previo, pendiente] = await Promise.all([leerProducto(codigo), leerPendiente(codigo)]);
   // Si es nuevo, traemos nombre, marca y tamaño de Precios Claros para no tener que tipearlos
-  const conocido = previo ? null : await buscarEnPreciosClaros(codigo);
+  const conocido = previo || pendiente ? null : await buscarEnPreciosClaros(codigo);
   if (!vigente()) return;
   const { noEsAlimento, ...sugerido } = conocido || {};
   const p = previo || { codigo, n: {}, ...sugerido };
-  const volver = previo ? '#/p/' + codigo : '#/';
+  // Datos que se anotaron al sacar las fotos
+  if (pendiente) {
+    if (!p.nombre || p.nombre === 'Producto sin nombre') p.nombre = pendiente.nombre;
+    p.marca = p.marca || pendiente.marca;
+    p.cantidad = p.cantidad || pendiente.cantidad;
+    if (!previo) p.esBebida = pendiente.esBebida;
+  }
+  const volver = previo ? '#/p/' + codigo : pendiente ? '#/pendientes' : '#/';
   const valor = (x) => (x === null || x === undefined ? '' : String(Math.round(x * 10) / 10).replace('.', ','));
-  let foto = p.imagen || null;
+  let foto = p.imagen || pendiente?.fotos.frente || null;
 
   app.innerHTML = `
     ${cabecera(previo ? 'Completar datos' : 'Cargar producto', volver)}
+    ${pendiente ? panelFotos(pendiente) : ''}
     <form class="contenido formulario" id="form-cargar" novalidate>
       <article class="tarjeta">
         <p class="gris chico">Código de barras: <b>${esc(codigo)}</b></p>
@@ -618,6 +732,7 @@ async function pantallaCargar(codigo, vigente) {
 
       <article class="tarjeta">
         <h3>Tabla nutricional</h3>
+        ${botonLeer('tabla', pendiente)}
         <p class="gris chico">Copiá los números de la tabla del envase. Los que no figuren, dejalos vacíos.</p>
         <fieldset class="opciones">
           <legend>Los valores que vas a cargar son:</legend>
@@ -636,6 +751,7 @@ async function pantallaCargar(codigo, vigente) {
 
       <article class="tarjeta">
         <h3>Ingredientes</h3>
+        ${botonLeer('ingredientes', pendiente)}
         <label>Copiá la lista tal cual figura en el envase
           <textarea name="ingredientes" rows="5" placeholder="Ej.: Agua, gelatina, azúcar, acidulante: ácido cítrico (INS 330)…">${esc(p.ingredientesTexto)}</textarea>
         </label>
@@ -649,6 +765,8 @@ async function pantallaCargar(codigo, vigente) {
     </form>`;
 
   const form = document.getElementById('form-cargar');
+  if (pendiente) conectarPanelFotos(pendiente);
+  conectarLectura(form, pendiente);
 
   document.getElementById('foto-producto').addEventListener('change', async (e) => {
     const archivo = e.target.files[0];
@@ -709,29 +827,13 @@ async function pantallaCargar(codigo, vigente) {
       producto.tieneCafeina = false;
     }
     await guardarProducto(producto);
+    if (pendiente) await borrarPendiente(codigo);
     aviso('Producto guardado en tu celular.');
     if (!previo) codigoNuevo = codigo;
     ir('#/p/' + codigo);
   });
 }
 
-// Achica la foto para que no ocupe mucho lugar en el celular.
-function achicarFoto(archivo, maximo = 640) {
-  return new Promise((resolver, rechazar) => {
-    const img = new Image();
-    img.onload = () => {
-      const escala = Math.min(1, maximo / Math.max(img.width, img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * escala);
-      canvas.height = Math.round(img.height * escala);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(img.src);
-      resolver(canvas.toDataURL('image/jpeg', 0.8));
-    };
-    img.onerror = rechazar;
-    img.src = URL.createObjectURL(archivo);
-  });
-}
 
 // ---------- Arranque ----------
 

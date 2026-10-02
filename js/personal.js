@@ -1,5 +1,5 @@
 // Pantallas personales: historial, favoritos y perfil.
-import { listarHistorial, borrarHistorial, listarFavoritos, leerPerfil, guardarPerfil, exportarTodo, importarTodo } from './db.js';
+import { listarHistorial, borrarHistorial, listarFavoritos, leerPerfil, guardarPerfil, exportarTodo, importarTodo, contarPendientes } from './db.js';
 import { analizar, nivelDePuntaje } from './analisis.js';
 import { CUIDADOS, EVITAR, ALERGIAS, perfilVacio, evaluarParaMi } from './perfil.js';
 import { esc, ICONOS, modo, cabecera, cargando, navegacion, filaProducto, fechaRelativa, aviso } from './ui.js';
@@ -36,12 +36,18 @@ function filas(items, perfil, detalle) {
 export async function pantallaHistorial(vigente) {
   modo(false);
   app.innerHTML = cabecera('Historial', null) + cargando('Cargando…') + navegacion('historial');
-  const [items, perfil] = await Promise.all([listarHistorial(), leerPerfil()]);
+  const [items, perfil, pendientes] = await Promise.all([listarHistorial(), leerPerfil(), contarPendientes()]);
   if (!vigente()) return;
 
   app.innerHTML = `
     ${cabecera('Historial', null)}
     <div class="contenido con-navegacion">
+      ${pendientes ? `
+        <a class="tarjeta aviso-pendientes" href="#/pendientes">
+          <span class="vacio-icono">${ICONOS.camara}</span>
+          <span><b>Para completar (${pendientes})</b><small>${pendientes === 1 ? 'Un producto' : pendientes + ' productos'} con fotos del envase esperando sus datos</small></span>
+          <span aria-hidden="true">›</span>
+        </a>` : ''}
       ${items.length
         ? `${filas(items, perfil, (i) => fechaRelativa(i.fecha))}
            <button class="btn btn-texto" id="borrar-historial" type="button">Borrar historial</button>`

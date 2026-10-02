@@ -17,6 +17,14 @@ db.version(2).stores({
   favoritos: 'codigo, fecha',
   ajustes: 'clave',
 });
+// pendientes: productos con fotos del envase, para completar después
+db.version(3).stores({
+  productos: 'codigo, fuente, actualizado',
+  escaneos: '++id, codigo, fecha',
+  favoritos: 'codigo, fecha',
+  ajustes: 'clave',
+  pendientes: 'codigo, fecha',
+});
 
 // ---------- Productos ----------
 
@@ -111,6 +119,29 @@ export async function quitarDeComparacion(codigo) {
   await guardarComparacion((await leerComparacion()).filter((c) => c !== codigo));
 }
 
+// ---------- Pendientes (fotos del envase para completar después) ----------
+// { codigo, fecha, nombre, marca, cantidad, esBebida, fotos: { tabla, ingredientes, frente } }
+
+export function guardarPendiente(pendiente) {
+  return db.pendientes.put({ ...pendiente, fecha: Date.now() });
+}
+
+export function leerPendiente(codigo) {
+  return db.pendientes.get(codigo);
+}
+
+export function listarPendientes() {
+  return db.pendientes.orderBy('fecha').reverse().toArray();
+}
+
+export function contarPendientes() {
+  return db.pendientes.count();
+}
+
+export function borrarPendiente(codigo) {
+  return db.pendientes.delete(codigo);
+}
+
 // ---------- Copia de seguridad ----------
 
 export async function exportarTodo() {
@@ -122,6 +153,7 @@ export async function exportarTodo() {
     escaneos: await db.escaneos.toArray(),
     favoritos: await db.favoritos.toArray(),
     ajustes: await db.ajustes.toArray(),
+    pendientes: await db.pendientes.toArray(),
   };
 }
 
@@ -129,7 +161,7 @@ export async function exportarTodo() {
 // Devuelve cuántos productos trajo.
 export async function importarTodo(copia) {
   if (!copia || copia.app !== 'SaludableScan') throw new Error('no es una copia de SaludableScan');
-  await db.transaction('rw', db.productos, db.escaneos, db.favoritos, db.ajustes, async () => {
+  await db.transaction('rw', db.productos, db.escaneos, db.favoritos, db.ajustes, db.pendientes, async () => {
     // Los productos cargados a mano en este celular no se pisan con versiones de Open Food Facts
     for (const p of copia.productos || []) {
       const actual = await db.productos.get(p.codigo);
@@ -142,6 +174,11 @@ export async function importarTodo(copia) {
     await db.escaneos.bulkAdd(nuevos);
     await db.favoritos.bulkPut(copia.favoritos || []);
     await db.ajustes.bulkPut(copia.ajustes || []);
+    // Pendientes: solo los que no están ya completos en este celular
+    for (const pend of copia.pendientes || []) {
+      const prod = await db.productos.get(pend.codigo);
+      if (!prod || !prod.n || prod.n.kcal === null || prod.n.kcal === undefined) await db.pendientes.put(pend);
+    }
   });
   return (copia.productos || []).length;
 }

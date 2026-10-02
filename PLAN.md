@@ -68,22 +68,22 @@ Vamos **etapa por etapa**. No se pasa a la siguiente hasta probar la anterior en
 
 ---
 
-## Etapa 5 — Fotos del envase y lectura automática (para productos sin datos)
+## Etapa 5 — Fotos del envase y lectura automática (para productos sin datos) ✅ (pasos 1 y 2)
 
 Objetivo: ir armando nuestra propia base de productos en el celular, con el menor tipeo posible.
 
 **Paso 1 — "Sacar foto ahora, completar después"**
-- [ ] En el súper: sacar foto de la tabla nutricional y de los ingredientes, y guardar el producto como **pendiente** (con nombre y marca de Precios Claros)
-- [ ] Lista de **pendientes** para completar en casa, viendo la foto en pantalla mientras se copian los números
-- [ ] Al escanear un producto pendiente, mostrar "Te falta completar este producto"
+- [x] En el súper: sacar foto de la tabla nutricional y de los ingredientes, y guardar el producto como **pendiente** (con nombre y marca de Precios Claros)
+- [x] Lista de **pendientes** para completar en casa, viendo la foto en pantalla mientras se copian los números
+- [x] Al escanear un producto pendiente, mostrar "Te falta completar este producto"
 
 **Paso 2 — Que la app lea la foto sola**, gratis y sin servidor, con la librería **Tesseract** (lee texto de fotos dentro del celular)
 
-- [ ] Botón **"Leer ingredientes con la cámara"**: pasa el texto de la foto al campo de ingredientes (de ahí salen aditivos, edulcorantes, cafeína y si tiene azúcar, grasa o sal agregadas)
-- [ ] Botón **"Leer tabla con la cámara"**: intenta reconocer calorías, azúcares, grasas, saturadas, sodio, fibra, proteínas y la porción
-- [ ] El usuario siempre revisa y corrige antes de guardar
-- [ ] Consejos en pantalla para una buena foto (luz, sin reflejos, de frente)
-- [ ] Poder leer también las fotos de los productos pendientes que ya se guardaron
+- [x] Botón **"Leer ingredientes con la cámara"**: pasa el texto de la foto al campo de ingredientes (de ahí salen aditivos, edulcorantes, cafeína y si tiene azúcar, grasa o sal agregadas)
+- [x] Botón **"Leer tabla con la cámara"**: intenta reconocer calorías, azúcares, grasas, saturadas, sodio, fibra, proteínas y la porción
+- [x] El usuario siempre revisa y corrige antes de guardar
+- [x] Consejos en pantalla para una buena foto (luz, sin reflejos, de frente)
+- [x] Poder leer también las fotos de los productos pendientes que ya se guardaron
 
 A tener en cuenta:
 - Los **excesos (octógonos)** salen de la **tabla nutricional**, no de los ingredientes: hacen falta las dos fotos.
@@ -153,3 +153,4 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 01/10/2026 | Etapa 2: barra de navegación, perfil (cuidados, cosas a evitar, alergias, ingredientes propios), alertas roja/amarilla, puntaje personal, historial, favoritos y copia de seguridad |
 | 01/10/2026 | Etapa 3: comparar hasta 3 productos lado a lado (mejor opción, ✓/!/✗, valores por porción y cada 100 g con el mejor en verde). Se agrega desde el resultado o desde el historial |
 | 01/10/2026 | Etapa 4: íconos PNG (Android e iPhone), fotos guardadas para ver sin internet, aviso de "sin internet", pantallas revisadas a 360 px, números con coma y "sin dato" cuando falta información. Las actualizaciones llegan al reabrir la app |
+| 01/10/2026 | Etapa 5: fotos del envase guardadas como "pendientes" (Historial → Para completar), foto fija arriba del formulario con visor para acercar, y lectura automática de tabla e ingredientes con Tesseract (8 de 8 datos en fotos de prueba, también torcidas y borrosas) |

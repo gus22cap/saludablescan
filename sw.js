@@ -1,7 +1,7 @@
 // Service worker: guarda los archivos de la app para que abra rápido y sin internet.
 // Archivos de la app: "primero la red" (si hay conexión, siempre trae la última versión).
 // Fotos de productos: "primero lo guardado" (no cambian, y así se ven sin internet).
-const CACHE = 'saludablescan-v6';
+const CACHE = 'saludablescan-v8';
 const CACHE_FOTOS = 'saludablescan-fotos'; // no se borra al actualizar la app
 const MAX_FOTOS = 300;
 const ARCHIVOS = [
@@ -23,6 +23,9 @@ const ARCHIVOS = [
   './js/perfil.js',
   './js/personal.js',
   './js/comparar.js',
+  './js/fotos.js',
+  './js/lector-texto.js',
+  './lib/tesseract.min.js',
   './lib/dexie.min.js',
   './lib/zxing.min.js',
 ];
