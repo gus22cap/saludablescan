@@ -500,7 +500,7 @@ details[open] summary { margin-bottom: 12px; }
 /* ---------- Formulario ---------- */
 .formulario label { display: grid; gap: 6px; font-size: 0.92rem; font-weight: 600; }
 .formulario small { color: var(--gris); font-weight: 400; }
-.formulario input:not([type='radio']):not([type='file']),
+.formulario input:not([type='radio']):not([type='file']):not([type='checkbox']),
 .formulario textarea {
   width: 100%;
   font: inherit;
@@ -595,3 +595,117 @@ details[open] summary { margin-bottom: 12px; }
 .notas { background: var(--amarillo-claro); box-shadow: none; }
 .notas div { display: grid; gap: 4px; }
 .notas p { font-size: 0.92rem; color: #5c4a00; }
+
+/* ---------- Etapa 2: navegación, listas, perfil y alertas ---------- */
+.navegacion {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 520px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: rgba(255, 255, 255, 0.97);
+  border-top: 1px solid var(--linea);
+  padding: 6px 4px calc(env(safe-area-inset-bottom, 0px) + 6px);
+  backdrop-filter: blur(8px);
+}
+.navegacion a {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gris);
+  text-decoration: none;
+}
+.navegacion a.activa { color: var(--verde); }
+.navegacion-oscura { position: static; transform: none; background: transparent; border-top: 1px solid rgba(255, 255, 255, 0.12); padding-bottom: 0; }
+.navegacion-oscura a { color: rgba(255, 255, 255, 0.65); }
+.navegacion-oscura a.activa { color: #3ddc6f; }
+.con-navegacion { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 90px); }
+.escanear { gap: 14px; }
+
+.btn-estrella {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  display: grid;
+  place-items: center;
+  color: var(--gris);
+  cursor: pointer;
+}
+.btn-estrella.activa { color: var(--amarillo); }
+
+.lista { padding: 6px 14px; gap: 0; }
+.fila-producto {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--linea);
+  color: var(--texto);
+  text-decoration: none;
+}
+.fila-producto:last-child { border-bottom: 0; }
+.fila-foto {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: #f0f3f1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--gris);
+}
+.fila-foto img { width: 100%; height: 100%; object-fit: contain; }
+.fila-datos { display: grid; min-width: 0; }
+.fila-datos b { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fila-datos small { color: var(--gris); font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pastilla {
+  min-width: 42px;
+  text-align: center;
+  padding: 5px 8px;
+  border-radius: 99px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+}
+.pastilla-verde { background: var(--verde); }
+.pastilla-amarillo { background: var(--amarillo); }
+.pastilla-rojo { background: var(--rojo); }
+.pastilla-gris { background: #b5c0b9; }
+
+.vacio { text-align: center; justify-items: center; padding: 30px 20px; }
+.vacio-icono { width: 64px; height: 64px; border-radius: 50%; background: var(--verde-claro); color: var(--verde); display: grid; place-items: center; }
+.btn-texto.confirmar { color: var(--rojo); font-weight: 700; }
+
+.casillas { display: grid; gap: 8px; }
+.casillas label {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--linea);
+  border-radius: 12px;
+  font-weight: 500 !important;
+  cursor: pointer;
+}
+.casillas label:has(input:checked) { border-color: var(--verde); background: var(--verde-claro); }
+.casillas input { width: 20px; height: 20px; accent-color: var(--verde); margin: 0; flex: none; }
+.botones label.btn { display: flex !important; }
+
+.alertas ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.alertas li { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.alertas-rojo { background: var(--rojo-claro); border: 2px solid var(--rojo); box-shadow: none; }
+.alertas-rojo h3 { color: #a32020; }
+.alertas-amarillo { background: var(--amarillo-claro); border: 2px solid var(--amarillo); box-shadow: none; }
+.alertas-amarillo h3 { color: #7a5c00; }
+.alertas a { justify-self: start; }
+.centrado-texto { text-align: center; line-height: 1.3; }

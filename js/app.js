@@ -1,9 +1,14 @@
 // SaludableScan — pantallas y navegación.
 import { buscarProducto, buscarEnPreciosClaros, codigoValido } from './api.js';
-import { guardarProducto, leerProducto, registrarEscaneo } from './db.js';
-import { analizar } from './analisis.js';
+import { guardarProducto, leerProducto, registrarEscaneo, esFavorito, alternarFavorito, leerPerfil } from './db.js';
+import { analizar, nivelDePuntaje } from './analisis.js';
+import { evaluarParaMi, perfilActivo } from './perfil.js';
 import { iniciarEscaner, detenerEscaner, linterna, leerDesdeFoto } from './escaner.js';
-import { esc, ICONOS, marca, anillo, octogono, leyenda, aviso, riesgoATipo, TEXTO_RIESGO } from './ui.js';
+import { pantallaHistorial, pantallaFavoritos, pantallaPerfil } from './personal.js';
+import {
+  esc, ICONOS, marca, anillo, octogono, leyenda, aviso, riesgoATipo, TEXTO_RIESGO,
+  modo, cabecera, cargando, navegacion,
+} from './ui.js';
 
 const app = document.getElementById('app');
 
@@ -35,6 +40,9 @@ async function router() {
       return await pantallaResultado(codigo, vigente);
     }
     if (seccion === 'cargar' && codigo) return await pantallaCargar(codigo, vigente);
+    if (seccion === 'historial') return await pantallaHistorial(vigente);
+    if (seccion === 'favoritos') return await pantallaFavoritos(vigente);
+    if (seccion === 'perfil') return await pantallaPerfil(vigente);
     // "#/escanear" prende la cámara de una; al abrir la app ("#/") espera a que el usuario la prenda
     return pantallaEscanear(seccion === 'escanear');
   } catch (err) {
@@ -44,24 +52,6 @@ async function router() {
 }
 
 // ---------- Piezas comunes ----------
-
-function modo(oscuro) {
-  document.body.classList.toggle('oscuro', oscuro);
-  document.querySelector('meta[name="theme-color"]').content = oscuro ? '#0f1a14' : '#1e9e4a';
-}
-
-function cabecera(titulo, volver = '#/') {
-  return `
-    <header class="barra">
-      <a href="${volver}" class="btn-atras" aria-label="Volver">${ICONOS.atras}</a>
-      <h1>${esc(titulo)}</h1>
-      <span class="barra-hueco"></span>
-    </header>`;
-}
-
-function cargando(texto) {
-  return `<div class="cargando"><div class="ruedita"></div><p>${esc(texto)}</p></div>`;
-}
 
 function pantallaMensaje(titulo, texto, botones) {
   modo(false);
@@ -113,6 +103,7 @@ function pantallaEscanear(prenderYa = false) {
         <input id="codigo" inputmode="numeric" placeholder="O tipeá el código de barras" aria-label="Código de barras">
         <button class="btn btn-verde" type="submit">Buscar</button>
       </form>
+      ${navegacion('escanear', true)}
     </section>`;
 
   const estado = document.getElementById('estado');
@@ -284,6 +275,14 @@ async function pantallaResultado(codigo, vigente) {
   if (!r) return;
   const p = r.producto;
   const a = analizar(p);
+  const [perfil, favorito] = await Promise.all([leerPerfil(), esFavorito(codigo)]);
+  if (!vigente()) return;
+  // Evaluación según el perfil del usuario (alertas y puntaje personal)
+  const mio = evaluarParaMi(p, a, perfil);
+  const personal = perfilActivo(perfil) && a.puntaje !== null && mio.puntaje !== a.puntaje;
+  const puntajeVisible = personal ? mio.puntaje : a.puntaje;
+  const nivelVisible = nivelDePuntaje(puntajeVisible);
+  const barra = cabecera('Resultado del análisis', '#/', botonFavorito(favorito));
 
   if (codigoNuevo === codigo) {
     codigoNuevo = null;
@@ -294,9 +293,10 @@ async function pantallaResultado(codigo, vigente) {
   if (a.puntaje === null) {
     const aModerar = a.aditivos.filter((x) => x.r === 'alto' || x.r === 'moderado');
     app.innerHTML = `
-      ${cabecera('Resultado del análisis')}
+      ${barra}
       <div class="contenido">
         ${tarjetaProducto(p)}
+        ${tarjetaAlertas(mio.alertas)}
         ${tarjetaNotas(a.notas)}
         <article class="tarjeta mensaje">
           <h3 class="centrado">Faltan datos para analizarlo</h3>
@@ -310,6 +310,7 @@ async function pantallaResultado(codigo, vigente) {
         </article>
         <p class="pie">Código ${esc(codigo)}</p>
       </div>`;
+    conectarFavorito(codigo);
     return;
   }
 
@@ -320,16 +321,19 @@ async function pantallaResultado(codigo, vigente) {
     `<tr><td>${nombre}</td><td>${valor === null || valor === undefined ? '<span class="gris">—</span>' : esc(Math.round(valor * 10) / 10) + ' ' + u}</td></tr>`;
 
   app.innerHTML = `
-    ${cabecera('Resultado del análisis')}
+    ${barra}
     <div class="contenido">
       ${r.origen === 'sin-conexion' ? '<div class="franja">Sin conexión: te mostramos los datos guardados en el celular.</div>' : ''}
 
       ${tarjetaProducto(p)}
 
+      ${tarjetaAlertas(mio.alertas)}
+
       <article class="tarjeta puntaje">
         <div class="puntaje-anillo">
-          ${anillo(a.puntaje, a.nivel)}
-          <p class="nivel texto-${a.nivel.color}">${esc(a.nivel.texto)}</p>
+          ${anillo(puntajeVisible, nivelVisible)}
+          <p class="nivel texto-${nivelVisible.color}">${esc(nivelVisible.texto)}</p>
+          ${personal ? `<p class="gris chico centrado-texto">Tu puntaje<br>General: ${a.puntaje}</p>` : ''}
         </div>
         <ul class="chips">
           ${a.chips.map((c) => `<li>${marca(c.tipo)}<span>${esc(c.texto)}</span></li>`).join('')}
@@ -362,7 +366,7 @@ async function pantallaResultado(codigo, vigente) {
         <p class="resumen">${esc(a.resumen)}</p>
         ${a.puntaje !== null ? `
           <div class="termometro">
-            <div class="termometro-barra"><span style="left:${a.puntaje}%"></span></div>
+            <div class="termometro-barra"><span style="left:${puntajeVisible}%"></span></div>
             <div class="termometro-textos"><span class="texto-rojo">Poco saludable</span><span class="texto-amarillo">Regular</span><span class="texto-verde">Muy saludable</span></div>
           </div>` : ''}
       </article>
@@ -382,7 +386,10 @@ async function pantallaResultado(codigo, vigente) {
           <ul class="motivos">
             <li><span>Puntaje inicial</span><b>100</b></li>
             ${a.motivos.map((m) => `<li><span>${esc(m.texto)}</span><b class="${m.puntos < 0 ? 'texto-rojo' : 'texto-verde'}">${m.puntos > 0 ? '+' : ''}${m.puntos}</b></li>`).join('')}
-            <li class="total"><span>Puntaje final</span><b>${a.puntaje}</b></li>
+            <li class="total"><span>Puntaje general</span><b>${a.puntaje}</b></li>
+            ${personal ? `
+              ${mio.restas.map((m) => `<li><span>Tu perfil: ${esc(m.texto.toLowerCase())}</span><b class="texto-rojo">-${m.puntos}</b></li>`).join('')}
+              <li class="total"><span>Tu puntaje${mio.alertas.some((x) => x.nivel === 'rojo') ? ' (máximo 39 si tiene algo que evitás)' : ''}</span><b>${mio.puntaje}</b></li>` : ''}
           </ul>
         </details>
       </article>` : ''}
@@ -412,6 +419,36 @@ async function pantallaResultado(codigo, vigente) {
       <p class="pie">Información orientativa: no reemplaza el consejo de un profesional de la salud.<br>
       ${p.fuente === 'off' ? 'Datos de <a href="https://world.openfoodfacts.org/product/' + esc(codigo) + '" target="_blank" rel="noopener">Open Food Facts</a>.' : ''} Código ${esc(codigo)}</p>
     </div>`;
+  conectarFavorito(codigo);
+}
+
+function botonFavorito(activo) {
+  return `<button class="btn-estrella${activo ? ' activa' : ''}" id="btn-favorito" type="button"
+    aria-label="${activo ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-pressed="${activo}">
+    ${activo ? ICONOS.estrellaLlena : ICONOS.estrella}</button>`;
+}
+
+function conectarFavorito(codigo) {
+  const boton = document.getElementById('btn-favorito');
+  if (!boton) return;
+  boton.addEventListener('click', async () => {
+    const activo = await alternarFavorito(codigo);
+    boton.outerHTML = botonFavorito(activo);
+    conectarFavorito(codigo);
+    aviso(activo ? 'Agregado a favoritos ⭐' : 'Quitado de favoritos', 1800);
+  });
+}
+
+// Alertas según el perfil (lo que el usuario evita, alergias)
+function tarjetaAlertas(alertas) {
+  if (!alertas.length) return '';
+  const rojas = alertas.filter((x) => x.nivel === 'rojo');
+  return `
+    <article class="tarjeta alertas ${rojas.length ? 'alertas-rojo' : 'alertas-amarillo'}" role="alert">
+      <h3>${ICONOS.alerta} ${rojas.length ? 'Ojo: tiene algo que evitás' : 'Revisá antes de comprar'}</h3>
+      <ul>${alertas.map((x) => `<li>${marca(x.nivel === 'rojo' ? 'mal' : 'ojo')}<span>${esc(x.texto)}</span></li>`).join('')}</ul>
+      <a class="chico" href="#/perfil">Cambiar mi perfil</a>
+    </article>`;
 }
 
 // ---------- Pantalla 3: Ingredientes y aditivos ----------

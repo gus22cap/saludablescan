@@ -39,15 +39,15 @@ Vamos **etapa por etapa**. No se pasa a la siguiente hasta probar la anterior en
 
 ---
 
-## Etapa 2 — Lo personal
+## Etapa 2 — Lo personal ✅
 
-- [ ] **Perfil** sin login: "cuido el azúcar", "cuido la sal", "evito edulcorantes", "evito el aspartamo", alergias e ingredientes a evitar
-- [ ] Puntaje personal ajustado según el perfil
-- [ ] **Alerta roja** si el producto tiene algo que marcaste para evitar
-- [ ] Aviso en el perfil: "La app es orientativa, no es consejo médico"
-- [ ] **Historial** de escaneos
-- [ ] **Favoritos**
-- [ ] Botón **Exportar / Importar copia de seguridad** (para no perder datos si cambiás de celular)
+- [x] **Perfil** sin login: "cuido el azúcar", "cuido la sal", "evito edulcorantes", "evito el aspartamo", alergias e ingredientes a evitar
+- [x] Puntaje personal ajustado según el perfil
+- [x] **Alerta roja** si el producto tiene algo que marcaste para evitar
+- [x] Aviso en el perfil: "La app es orientativa, no es consejo médico"
+- [x] **Historial** de escaneos
+- [x] **Favoritos**
+- [x] Botón **Exportar / Importar copia de seguridad** (para no perder datos si cambiás de celular)
 
 ---
 
@@ -150,3 +150,4 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 30/09/2026 | Se reconocen productos no alimenticios (higiene, limpieza) y se mejoró la pantalla de productos sin tabla nutricional |
 | 30/09/2026 | Publicada en GitHub Pages y probada en el celular: funciona. **Próximo: comparar envases reales y seguir con la Etapa 2** |
 | 01/10/2026 | Avisos especiales para café: torrado (según porcentaje), no es principalmente café, achicoria/cereales y saborizantes |
+| 01/10/2026 | Etapa 2: barra de navegación, perfil (cuidados, cosas a evitar, alergias, ingredientes propios), alertas roja/amarilla, puntaje personal, historial, favoritos y copia de seguridad |

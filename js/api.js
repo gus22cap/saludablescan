@@ -5,7 +5,7 @@ const CAMPOS = [
   'product_name', 'product_name_es', 'generic_name_es', 'brands', 'quantity',
   'image_front_url', 'image_url', 'nutriments', 'nutrition_data_per',
   'ingredients_text_es', 'ingredients_text', 'ingredients_tags', 'additives_tags',
-  'categories_tags', 'labels_tags', 'serving_size', 'serving_quantity',
+  'categories_tags', 'labels_tags', 'serving_size', 'serving_quantity', 'allergens_tags', 'traces_tags',
 ].join(',');
 
 const DIAS_CACHE = 7;
@@ -188,6 +188,8 @@ function desdeOpenFoodFacts(codigo, p) {
     ingredientesTexto: p.ingredients_text_es || p.ingredients_text || '',
     aditivosTags: p.additives_tags || [],
     agregados: agregadosDesdeEtiquetas(p.ingredients_tags),
+    alergenos: p.allergens_tags || [],
+    trazas: p.traces_tags || [],
     tieneCafeina: (p.ingredients_tags || []).includes('en:caffeine'),
     sinTacc: etiquetas.some((t) => ['en:no-gluten', 'en:gluten-free', 'es:sin-tacc', 'ar:sin-tacc'].includes(t)),
   };
