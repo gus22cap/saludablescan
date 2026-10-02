@@ -709,3 +709,61 @@ details[open] summary { margin-bottom: 12px; }
 .alertas-amarillo h3 { color: #7a5c00; }
 .alertas a { justify-self: start; }
 .centrado-texto { text-align: center; line-height: 1.3; }
+
+/* ---------- Etapa 3: comparar ---------- */
+.navegacion { grid-template-columns: repeat(5, 1fr); }
+.navegacion a { font-size: 0.68rem; }
+.comp-ganador {
+  background: var(--verde-claro);
+  color: var(--verde-oscuro);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 600;
+  text-align: center;
+}
+.comparacion { --columnas: 3; padding: 14px 10px; gap: 0; }
+.comp-valores { display: grid; grid-template-columns: repeat(var(--columnas), minmax(0, 1fr)); gap: 6px; }
+.comp-cabeza { padding-bottom: 12px; border-bottom: 1px solid var(--linea); }
+.comp-producto { position: relative; display: grid; justify-items: center; text-align: center; gap: 3px; min-width: 0; }
+.comp-producto b { font-size: 0.9rem; line-height: 1.2; overflow-wrap: anywhere; }
+.comp-producto small { font-size: 0.72rem; line-height: 1.2; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.comp-foto { width: 64px; height: 64px; border-radius: 12px; background: #f0f3f1; display: grid; place-items: center; overflow: hidden; color: var(--gris); margin-bottom: 4px; }
+.comp-foto img { width: 100%; height: 100%; object-fit: contain; }
+.comp-quitar {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  background: #eef2ef;
+  color: var(--gris);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.comp-producto .anillo { margin-top: 6px; }
+.comp-producto .anillo-texto { padding-top: 32%; }
+.comp-producto .anillo-texto strong { font-size: 1.4rem; }
+.comp-producto .anillo-texto span { font-size: 0.7rem; }
+.comp-nivel { font-size: 0.78rem; font-weight: 700; }
+.comp-fila { padding: 10px 0 8px; border-bottom: 1px solid var(--linea); }
+.comp-etiqueta { font-size: 0.82rem; font-weight: 600; color: #3c4a41; padding: 0 4px 6px; }
+.comp-etiqueta small { color: var(--gris); font-weight: 400; }
+.comp-celda { display: grid; justify-items: center; gap: 2px; font-size: 0.85rem; }
+.comp-celda small { font-size: 0.68rem; color: var(--gris); }
+.comp-numero.mejor { color: var(--verde-oscuro); font-weight: 800; }
+.comp-octo {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  background: #000;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  clip-path: polygon(29.3% 0, 70.7% 0, 100% 29.3%, 100% 70.7%, 70.7% 100%, 29.3% 100%, 0 70.7%, 0 29.3%);
+}
+.comp-pie { padding-top: 12px; }
+.btn-chico { min-height: 40px; padding: 8px 6px; font-size: 0.82rem; border-radius: 10px; }

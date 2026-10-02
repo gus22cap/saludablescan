@@ -1,10 +1,11 @@
 // SaludableScan — pantallas y navegación.
 import { buscarProducto, buscarEnPreciosClaros, codigoValido } from './api.js';
-import { guardarProducto, leerProducto, registrarEscaneo, esFavorito, alternarFavorito, leerPerfil } from './db.js';
+import { guardarProducto, leerProducto, registrarEscaneo, esFavorito, alternarFavorito, leerPerfil, agregarAComparacion, leerComparacion, MAX_COMPARAR } from './db.js';
 import { analizar, nivelDePuntaje } from './analisis.js';
 import { evaluarParaMi, perfilActivo } from './perfil.js';
 import { iniciarEscaner, detenerEscaner, linterna, leerDesdeFoto } from './escaner.js';
 import { pantallaHistorial, pantallaFavoritos, pantallaPerfil } from './personal.js';
+import { pantallaComparar } from './comparar.js';
 import {
   esc, ICONOS, marca, anillo, octogono, leyenda, aviso, riesgoATipo, TEXTO_RIESGO,
   modo, cabecera, cargando, navegacion,
@@ -43,6 +44,7 @@ async function router() {
     if (seccion === 'historial') return await pantallaHistorial(vigente);
     if (seccion === 'favoritos') return await pantallaFavoritos(vigente);
     if (seccion === 'perfil') return await pantallaPerfil(vigente);
+    if (seccion === 'comparar') return await pantallaComparar(vigente);
     // "#/escanear" prende la cámara de una; al abrir la app ("#/") espera a que el usuario la prenda
     return pantallaEscanear(seccion === 'escanear');
   } catch (err) {
@@ -412,6 +414,7 @@ async function pantallaResultado(codigo, vigente) {
 
       <div class="botones">
         <a class="btn btn-verde" href="#/p/${codigo}/ingredientes">Ver ingredientes y aditivos</a>
+        <button class="btn btn-borde" type="button" id="btn-comparar">${ICONOS.comparar} Comparar con otro producto</button>
         <a class="btn btn-borde" href="#/cargar/${codigo}">${p.fuente === 'manual' ? 'Editar datos' : 'Completar o corregir datos'}</a>
         <a class="btn btn-texto" href="#/escanear">Escanear otro producto</a>
       </div>
@@ -420,12 +423,24 @@ async function pantallaResultado(codigo, vigente) {
       ${p.fuente === 'off' ? 'Datos de <a href="https://world.openfoodfacts.org/product/' + esc(codigo) + '" target="_blank" rel="noopener">Open Food Facts</a>.' : ''} Código ${esc(codigo)}</p>
     </div>`;
   conectarFavorito(codigo);
+  conectarComparar(codigo);
 }
 
 function botonFavorito(activo) {
   return `<button class="btn-estrella${activo ? ' activa' : ''}" id="btn-favorito" type="button"
     aria-label="${activo ? 'Quitar de favoritos' : 'Agregar a favoritos'}" aria-pressed="${activo}">
     ${activo ? ICONOS.estrellaLlena : ICONOS.estrella}</button>`;
+}
+
+function conectarComparar(codigo) {
+  const boton = document.getElementById('btn-comparar');
+  if (!boton) return;
+  boton.addEventListener('click', async () => {
+    const r = await agregarAComparacion(codigo);
+    if (r === 'lleno') aviso(`Ya tenés ${MAX_COMPARAR} productos para comparar: sacá uno con la ✕ para sumar este.`, 4000);
+    else if ((await leerComparacion()).length < 2) aviso('Agregado. Sumá otro desde tu historial o escaneando otro producto.', 4000);
+    ir('#/comparar');
+  });
 }
 
 function conectarFavorito(codigo) {

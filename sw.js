@@ -1,6 +1,6 @@
 // Service worker: guarda los archivos de la app para que abra rápido y sin internet.
 // Usa "primero la red": si hay conexión, siempre trae la última versión.
-const CACHE = 'saludablescan-v3';
+const CACHE = 'saludablescan-v4';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const ARCHIVOS = [
   './js/ui.js',
   './js/perfil.js',
   './js/personal.js',
+  './js/comparar.js',
   './lib/dexie.min.js',
   './lib/zxing.min.js',
 ];

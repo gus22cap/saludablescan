@@ -85,6 +85,32 @@ export function guardarPerfil(perfil) {
   return db.ajustes.put({ clave: 'perfil', valor: perfil });
 }
 
+// ---------- Comparación (hasta 3 productos) ----------
+
+export const MAX_COMPARAR = 3;
+
+export async function leerComparacion() {
+  const fila = await db.ajustes.get('comparar');
+  return fila ? fila.valor : [];
+}
+
+export function guardarComparacion(codigos) {
+  return db.ajustes.put({ clave: 'comparar', valor: codigos.slice(0, MAX_COMPARAR) });
+}
+
+// Devuelve 'agregado', 'ya-estaba' o 'lleno'
+export async function agregarAComparacion(codigo) {
+  const codigos = await leerComparacion();
+  if (codigos.includes(codigo)) return 'ya-estaba';
+  if (codigos.length >= MAX_COMPARAR) return 'lleno';
+  await guardarComparacion([...codigos, codigo]);
+  return 'agregado';
+}
+
+export async function quitarDeComparacion(codigo) {
+  await guardarComparacion((await leerComparacion()).filter((c) => c !== codigo));
+}
+
 // ---------- Copia de seguridad ----------
 
 export async function exportarTodo() {

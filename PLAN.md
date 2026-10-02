@@ -51,11 +51,11 @@ Vamos **etapa por etapa**. No se pasa a la siguiente hasta probar la anterior en
 
 ---
 
-## Etapa 3 — Comparar
+## Etapa 3 — Comparar ✅
 
-- [ ] Elegir 2 o 3 productos (del historial o de favoritos)
-- [ ] **Pantalla Comparar:** anillos de puntaje lado a lado y filas con ✓ / ! / ✗ (aspartamo, colorantes, conservantes), azúcar y calorías por porción
-- [ ] Botón "Ver detalle de cada producto"
+- [x] Elegir 2 o 3 productos (del historial o de favoritos)
+- [x] **Pantalla Comparar:** anillos de puntaje lado a lado y filas con ✓ / ! / ✗ (aspartamo, colorantes, conservantes), azúcar y calorías por porción
+- [x] Botón "Ver detalle de cada producto"
 
 ---
 
@@ -151,3 +151,4 @@ Cosméticos e higiene (Open Beauty Facts), servidor propio y cuentas de usuario,
 | 30/09/2026 | Publicada en GitHub Pages y probada en el celular: funciona. **Próximo: comparar envases reales y seguir con la Etapa 2** |
 | 01/10/2026 | Avisos especiales para café: torrado (según porcentaje), no es principalmente café, achicoria/cereales y saborizantes |
 | 01/10/2026 | Etapa 2: barra de navegación, perfil (cuidados, cosas a evitar, alergias, ingredientes propios), alertas roja/amarilla, puntaje personal, historial, favoritos y copia de seguridad |
+| 01/10/2026 | Etapa 3: comparar hasta 3 productos lado a lado (mejor opción, ✓/!/✗, valores por porción y cada 100 g con el mejor en verde). Se agrega desde el resultado o desde el historial |
