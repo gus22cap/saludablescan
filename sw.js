@@ -1,6 +1,6 @@
 // Service worker: guarda los archivos de la app para que abra rápido y sin internet.
 // Usa "primero la red": si hay conexión, siempre trae la última versión.
-const CACHE = 'saludablescan-v4';
+const CACHE = 'saludablescan-v5';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -22,7 +22,8 @@ const ARCHIVOS = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ARCHIVOS)));
+  // "reload": baja los archivos frescos, no los que el navegador tenía guardados
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ARCHIVOS.map((u) => new Request(u, { cache: 'reload' })))));
   self.skipWaiting();
 });
 
@@ -40,7 +41,8 @@ self.addEventListener('fetch', (e) => {
   // Solo manejamos los archivos propios; Open Food Facts va directo a internet.
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request)
+    // "no-cache": siempre pregunta al servidor si hay una versión nueva (si no cambió, la respuesta es mínima)
+    fetch(e.request, { cache: 'no-cache' })
       .then((resp) => {
         const copia = resp.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copia));
